@@ -65,7 +65,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
             }
 
             protected abstract Task AppendDocumentDiagnosticsOfStateTypeAsync(Document document, StateType stateType, CancellationToken cancellationToken);
-            protected abstract Task AppendProjectAndDocumentDiagnosticsAsync(Project project, Func<DiagnosticData, bool> predicate, CancellationToken cancellationToken);
+            protected abstract Task AppendProjectAndDocumentDiagnosticsAsync(Project project, Document document, Func<DiagnosticData, bool> predicate, CancellationToken cancellationToken);
 
             public async Task<ImmutableArray<DiagnosticData>> GetDiagnosticsAsync(Solution solution, ProjectId projectId, DocumentId documentId, CancellationToken cancellationToken)
             {
@@ -79,7 +79,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
                     var document = solution.GetDocument(documentId);
 
                     await AppendDiagnosticsAsync(document, cancellationToken).ConfigureAwait(false);
-                    await AppendProjectAndDocumentDiagnosticsAsync(document.Project, d => d.DocumentId == documentId, cancellationToken).ConfigureAwait(false);
+                    await AppendProjectAndDocumentDiagnosticsAsync(document.Project, document, d => d.DocumentId == documentId, cancellationToken).ConfigureAwait(false);
                     return GetDiagnosticData();
                 }
 
@@ -131,7 +131,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
                     return SpecializedTasks.EmptyTask;
                 }
 
-                return AppendProjectAndDocumentDiagnosticsAsync(project, d => d.ProjectId == project.Id, cancellationToken);
+                return AppendProjectAndDocumentDiagnosticsAsync(project, null, d => d.ProjectId == project.Id, cancellationToken);
             }
 
             private async Task AppendDiagnosticsAsync(Solution solution, CancellationToken cancellationToken)
@@ -165,7 +165,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
 
             protected Task AppendProjectAndDocumentDiagnosticsAsync(Project project, CancellationToken cancellationToken)
             {
-                return AppendProjectAndDocumentDiagnosticsAsync(project, d => true, cancellationToken);
+                return AppendProjectAndDocumentDiagnosticsAsync(project, null, d => true, cancellationToken);
             }
 
             protected async Task AppendDiagnosticsAsync(Document document, CancellationToken cancellationToken)
@@ -300,8 +300,11 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
                 }
             }
 
-            protected override async Task AppendProjectAndDocumentDiagnosticsAsync(Project project, Func<DiagnosticData, bool> predicate, CancellationToken cancellationToken)
+            protected override async Task AppendProjectAndDocumentDiagnosticsAsync(
+                Project project, Document document, Func<DiagnosticData, bool> predicate, CancellationToken cancellationToken)
             {
+                var documents = document == null ? project.Documents.ToList() : SpecializedCollections.SingletonEnumerable(document);
+
                 foreach (var stateSet in this.StateManager.GetStateSets(project))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -310,9 +313,9 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
 
                     await AppendProjectAndDocumentDiagnosticsAsync(state, project, predicate, cancellationToken).ConfigureAwait(false);
 
-                    foreach (var document in project.Documents)
+                    foreach (var current in documents)
                     {
-                        await AppendProjectAndDocumentDiagnosticsAsync(state, project, predicate, cancellationToken).ConfigureAwait(false);
+                        await AppendProjectAndDocumentDiagnosticsAsync(state, current, predicate, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -348,7 +351,7 @@ namespace Microsoft.CodeAnalysis.Diagnostics.EngineV1
                 return AppendDiagnosticsOfStateTypeAsync(document, stateType, d => true, cancellationToken);
             }
 
-            protected override Task AppendProjectAndDocumentDiagnosticsAsync(Project project, Func<DiagnosticData, bool> predicate, CancellationToken cancellationToken)
+            protected override Task AppendProjectAndDocumentDiagnosticsAsync(Project project, Document document, Func<DiagnosticData, bool> predicate, CancellationToken cancellationToken)
             {
                 return AppendDiagnosticsOfStateTypeAsync(project, StateType.Project, predicate, cancellationToken);
             }
