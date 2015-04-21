@@ -294,6 +294,95 @@ class C
             }
         }
 
+        [WorkItem(1628, "https://github.com/dotnet/roslyn/issues/1628")]
+        [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
+        public void NotInLessThanComparisonOperation()
+        {
+            var code = @"using System.Linq;
+class C
+{
+    void Test(int[] args)
+    {
+        var a = args[0]$$
+    }
+}";
+            using (var session = CreateSession(code))
+            {
+                Assert.NotNull(session);
+                CheckStart(session.Session, expectValidSession: false);
+            }
+        }
+
+        [WorkItem(1628, "https://github.com/dotnet/roslyn/issues/1628")]
+        [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
+        public void NotInLessThanComparisonOperationAfterConditionalAccessExpression()
+        {
+            var code = @"using System.Linq;
+class C
+{
+    void Test(object[] args, object[] other)
+    {
+        var a = args?.First()$$
+    }
+}";
+            using (var session = CreateSession(code))
+            {
+                Assert.NotNull(session);
+                CheckStart(session.Session, expectValidSession: false);
+            }
+        }
+
+        [WorkItem(1628, "https://github.com/dotnet/roslyn/issues/1628")]
+        [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
+        public void TypeArgumentInConditionalAccessExpressionSimple()
+        {
+            var code = @"using System.Linq;
+class C
+{
+    void Test(object[] args)
+    {
+        args?.OfType$$
+    }
+}";
+            using (var session = CreateSession(code))
+            {
+                Assert.NotNull(session);
+                CheckStart(session.Session);
+            }
+        }
+
+        [WorkItem(1628, "https://github.com/dotnet/roslyn/issues/1628")]
+        [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
+        public void TypeArgumentInConditionalAccessExpressionNested()
+        {
+            var code = @"class C
+{
+    void Test()
+    {
+        Outer<int> t = new Outer<int>();
+        t?.GetInner<int>()?.Method$$
+    }
+}
+class Outer<T>
+{
+    public Inner<U> GetInner<U>()
+    {
+        return new Inner<U>();
+    }
+}
+class Inner<V>
+{
+    public void Method<X>() { }
+}";
+            using (var session = CreateSession(code))
+            {
+                Assert.NotNull(session);
+                CheckStart(session.Session);
+                Type(session.Session, "int");
+                CheckOverType(session.Session);
+            }
+        }
+
         internal Holder CreateSession(string code)
         {
             return CreateSession(
