@@ -135,23 +135,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.AutomaticCompletion
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
-        public void TypeArgument_Invalid()
-        {
-            var code = @"class C
-{
-    void Method()
-    {
-        List$$
-    }
-}";
-            using (var session = CreateSession(code))
-            {
-                Assert.NotNull(session);
-                CheckStart(session.Session, expectValidSession: false);
-            }
-        }
-
-        [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
         public void TypeArgument_Invalid2()
         {
             var code = @"class C
