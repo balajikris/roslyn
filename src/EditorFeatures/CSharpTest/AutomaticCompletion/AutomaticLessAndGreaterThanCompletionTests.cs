@@ -135,7 +135,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.AutomaticCompletion
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
-        public void TypeArgument_Invalid2()
+        public void TypeArgument_Invalid()
         {
             var code = @"class C
 {
@@ -153,7 +153,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.AutomaticCompletion
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
-        public void TypeArgument2()
+        public void TypeArgument1()
         {
             var code = @"class C
 {
@@ -170,7 +170,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.AutomaticCompletion
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
-        public void TypeArgument3()
+        public void TypeArgument2()
         {
             var code = @"class C
 {
@@ -363,6 +363,44 @@ class Inner<V>
                 CheckStart(session.Session);
                 Type(session.Session, "int");
                 CheckOverType(session.Session);
+            }
+        }
+
+        [WorkItem(1628, "https://github.com/dotnet/roslyn/issues/1628")]
+        [Fact, Trait(Traits.Feature, Traits.Features.AutomaticCompletion)]
+        public void TypeArgumentInConditionalAccessExpressionDeeplyNested()
+        {
+            var code = @"class C
+{
+    void Test()
+    {
+        new Outer1<int>()?.GetInner<int>()?.GetInner().DoSomething$$
+    }
+}
+internal class Outer1<T>
+{
+    public Outer2<U> GetInner<U>()
+    {
+        return new Outer2<U>();
+    }
+}
+internal class Outer2<U>
+{
+    public Outer2() { }
+    public Inner GetInner()
+    {
+        return new Inner();
+    }
+}
+internal class Inner
+{
+    public Inner() { }
+    public void DoSomething<V>() { }
+}";
+            using (var session = CreateSession(code))
+            {
+                Assert.NotNull(session);
+                CheckStart(session.Session);
             }
         }
 
