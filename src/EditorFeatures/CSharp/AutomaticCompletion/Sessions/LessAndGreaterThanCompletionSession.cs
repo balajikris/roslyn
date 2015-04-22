@@ -60,19 +60,19 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.AutomaticCompletion.Sessions
 
             var model = document.GetSemanticModelAsync(cancellationToken).WaitAndGetResult(cancellationToken);
 
-            // Analyze node on the left of < operator to verify if it is a generic type or method.
-            var leftNode = node.Left;
-            if (leftNode is ConditionalAccessExpressionSyntax)
+            var leftNode = token.GetPreviousToken().Parent;
+            var info = model.GetSymbolInfo(leftNode, cancellationToken);
+
+            if (!info.CandidateSymbols.Any())
             {
-                // If node on the left is a conditional access expression, get the member binding expression 
-                // from the innermost conditional acccess expression, which is the left of < operator. 
-                // e.g: In a?.b?.c< we need to get the conditional access expression .b?.c and analyze its
-                // member binding expression (the .c) to see if it is a generic type/method.
-                leftNode = leftNode.GetInnerMostConditionalAccessExpression().WhenNotNull;
+                return false;
             }
 
-            var info = model.GetSymbolInfo(leftNode, cancellationToken);
-            return info.CandidateSymbols.Any(IsGenericTypeOrMethod);
+            // There could be both generic and non-generic candidates for leftNode and GetSymbolInfo could have returned the non-generic one.
+            // In such cases, look up symbols available at the given position and see if there is another generic symbol that has the same name.
+            return info.CandidateSymbols.Any(IsGenericTypeOrMethod)
+                ? true
+                : model.LookupSymbols(leftNode.SpanStart, name: info.CandidateSymbols.First().Name).Any(IsGenericTypeOrMethod);
         }
 
         private static bool IsGenericTypeOrMethod(ISymbol symbol)
