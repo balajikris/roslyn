@@ -220,5 +220,68 @@ namespace NS
                 </Workspace>
             Test(input)
         End Sub
+
+        ' This doesn't work currently. Needs more work.
+        <WorkItem(2079, "https://github.com/dotnet/roslyn/issues/2079")>
+        <Fact, Trait(Traits.Feature, Traits.Features.FindReferences)>
+        Public Sub VerifyHighlightsForVisualBasicGlobalImportAliasedNamespace_OnlyAliases()
+            Dim input =
+                <Workspace>
+                    <Project Language="Visual Basic" CommonReferences="true">
+                        <CompilationOptions><GlobalImport>VB = Microsoft.VisualBasic</GlobalImport></CompilationOptions>
+                        <Document>
+                            Class Test
+                                Public Sub TestMethod()
+                                    Console.Write(NameOf([|$$VB|]))
+                                    Console.Write(NameOf([|VB|]))
+                                End Sub
+                            End Class
+                        </Document>
+                    </Project>
+                </Workspace>
+            Test(input)
+        End Sub
+
+        <WorkItem(2079, "https://github.com/dotnet/roslyn/issues/2079")>
+        <Fact, Trait(Traits.Feature, Traits.Features.FindReferences)>
+        Public Sub VerifyHighlightsForVisualBasicGlobalImportAliasedType()
+            Dim input =
+                <Workspace>
+                    <Project Language="Visual Basic" CommonReferences="true">
+                        <CompilationOptions><GlobalImport>MyInt = System.Int32</GlobalImport></CompilationOptions>
+                        <Document>
+                            Class Test
+                                Public Sub TestMethod()
+                                    Console.Write(NameOf([|$$MyInt|]))
+                                    Console.Write(NameOf([|MyInt|]))
+                                    Console.Write(NameOf(System.[|Int32|]))
+                                End Sub
+                            End Class
+                        </Document>
+                    </Project>
+                </Workspace>
+            Test(input)
+        End Sub
+
+        ' This doesn't work currently. Needs more work.
+        <WorkItem(2079, "https://github.com/dotnet/roslyn/issues/2079")>
+        <Fact, Trait(Traits.Feature, Traits.Features.FindReferences)>
+        Public Sub VerifyHighlightsForVisualBasicGlobalImportAliasedType_OnlyAliases()
+            Dim input =
+                <Workspace>
+                    <Project Language="Visual Basic" CommonReferences="true">
+                        <CompilationOptions><GlobalImport>MyInt = System.Int32</GlobalImport></CompilationOptions>
+                        <Document>
+                            Class Test
+                                Public Sub TestMethod()
+                                    Console.Write(NameOf([|$$MyInt|]))
+                                    Console.Write(NameOf([|MyInt|]))
+                                End Sub
+                            End Class
+                        </Document>
+                    </Project>
+                </Workspace>
+            Test(input)
+        End Sub
     End Class
 End Namespace
