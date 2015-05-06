@@ -215,6 +215,18 @@ Namespace Microsoft.CodeAnalysis.VisualBasic
             Return builder.ToImmutable()
         End Function
 
+        Public Function GetMatchingGlobalAliasFromTargetSymbol(model As SemanticModel, targetSymbol As ISymbol, cancellationToken As CancellationToken) As IAliasSymbol Implements ISemanticFactsService.GetMatchingGlobalAliasFromTargetSymbol
+            Dim original = DirectCast(model.GetOriginalSemanticModel(), SemanticModel)
+
+            For Each globalImport In original.Compilation.AliasImports
+                If globalImport.Target Is targetSymbol Then
+                    Return globalImport
+                End If
+            Next
+
+            Return Nothing
+        End Function
+
         Public Function GetForEachSymbols(model As SemanticModel, forEachStatement As SyntaxNode) As ForEachSymbols Implements ISemanticFactsService.GetForEachSymbols
 
             Dim vbForEachStatement = TryCast(forEachStatement, ForEachStatementSyntax)

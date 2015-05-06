@@ -560,6 +560,7 @@ namespace Microsoft.CodeAnalysis.FindSymbols.Finders
                 var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);
                 var token = root.FindToken(location.Location.SourceSpan.Start);
                 var node = token.Parent;
+                var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
                 var syntaxFacts = document.Project.LanguageServices.GetService<ISyntaxFactsService>();
                 if (syntaxFacts.IsRightSideOfQualifiedName(node))
@@ -570,12 +571,19 @@ namespace Microsoft.CodeAnalysis.FindSymbols.Finders
                 if (syntaxFacts.IsUsingDirectiveName(node))
                 {
                     var directive = node.Parent;
-                    var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
                     var aliasSymbol = semanticModel.GetDeclaredSymbol(directive, cancellationToken) as IAliasSymbol;
                     if (aliasSymbol != null)
                     {
                         return aliasSymbol;
                     }
+                }
+
+                var semanticFacts = document.Project.LanguageServices.GetService<ISemanticFactsService>();
+                var symbolToMatch = FindReferenceCache.GetSymbolInfo(semanticModel, node, cancellationToken).Symbol;
+                var alias = semanticFacts.GetMatchingGlobalAliasFromTargetSymbol(semanticModel, symbolToMatch, cancellationToken);
+                if (alias != null)
+                {
+                    return alias;
                 }
             }
 

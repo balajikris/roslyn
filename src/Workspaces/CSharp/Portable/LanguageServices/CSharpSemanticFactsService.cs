@@ -213,6 +213,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             return builder.ToImmutable();
         }
 
+        public IAliasSymbol GetMatchingGlobalAliasFromTargetSymbol(SemanticModel model, ISymbol targetSymbol, CancellationToken cancellationToken)
+        {
+            // C# does not have a concept of Global Imports
+            return null;
+        }
+
         private static void AppendAliasNames(SyntaxList<UsingDirectiveSyntax> usings, ImmutableHashSet<string>.Builder builder)
         {
             foreach (var @using in usings)

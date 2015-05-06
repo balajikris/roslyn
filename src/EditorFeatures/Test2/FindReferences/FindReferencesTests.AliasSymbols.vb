@@ -200,5 +200,25 @@ namespace NS
             Test(input)
         End Sub
 
+        <WorkItem(2079, "https://github.com/dotnet/roslyn/issues/2079")>
+        <Fact, Trait(Traits.Feature, Traits.Features.FindReferences)>
+        Public Sub VerifyHighlightsForVisualBasicGlobalImportAliasedNamespace()
+            Dim input =
+                <Workspace>
+                    <Project Language="Visual Basic" CommonReferences="true">
+                        <CompilationOptions><GlobalImport>VB = Microsoft.VisualBasic</GlobalImport></CompilationOptions>
+                        <Document>
+                            Class Test
+                                Public Sub TestMethod()
+                                    Console.Write(NameOf([|$$VB|]))
+                                    Console.Write(NameOf([|VB|]))
+                                    Console.Write(NameOf(Microsoft.[|VisualBasic|]))
+                                End Sub
+                            End Class
+                        </Document>
+                    </Project>
+                </Workspace>
+            Test(input)
+        End Sub
     End Class
 End Namespace

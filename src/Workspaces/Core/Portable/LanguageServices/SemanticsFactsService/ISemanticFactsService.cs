@@ -86,6 +86,13 @@ namespace Microsoft.CodeAnalysis.LanguageServices
         /// </summary>
         ImmutableHashSet<string> GetAliasNameSet(SemanticModel model, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Gets a Globally Imported Alias symbol, if one exists and whose target symbol is <paramref name="targetSymbol"/>.
+        /// This is implemented only for the Visual Basic language and not for CSharp, because Global Imports is a feature of the Visual Basic language.
+        /// </summary>
+        /// <returns></returns>
+        IAliasSymbol GetMatchingGlobalAliasFromTargetSymbol(SemanticModel model, ISymbol targetSymbol, CancellationToken cancellationToken);
+
         ForEachSymbols GetForEachSymbols(SemanticModel semanticModel, SyntaxNode forEachStatement);
 
         bool IsAssignableTo(ITypeSymbol fromSymbol, ITypeSymbol toSymbol, Compilation compilation);
