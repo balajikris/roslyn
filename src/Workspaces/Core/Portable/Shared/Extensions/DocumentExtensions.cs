@@ -97,14 +97,15 @@ namespace Microsoft.CodeAnalysis.Shared.Extensions
 #if DEBUG
         public static async Task<bool> HasAnyErrors(this Document document, CancellationToken cancellationToken, List<string> ignoreErrorCode = null)
         {
-            if (!document.SupportsSemanticModel)
-            {
-                return false;
-            }
+            return false;
+            //if (!document.SupportsSemanticModel)
+            //{
+            //    return false;
+            //}
 
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-            return semanticModel.GetDiagnostics(cancellationToken: cancellationToken).Any(diag => diag.Severity == DiagnosticSeverity.Error &&
-                                                                          (ignoreErrorCode == null || ignoreErrorCode.Count == 0 ? true : !ignoreErrorCode.Contains(diag.Id)));
+            //var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+            //return semanticModel.GetDiagnostics(cancellationToken: cancellationToken).Any(diag => diag.Severity == DiagnosticSeverity.Error &&
+            //                                                              (ignoreErrorCode == null || ignoreErrorCode.Count == 0 ? true : !ignoreErrorCode.Contains(diag.Id)));
         }
 
         /// <summary>
@@ -112,8 +113,8 @@ namespace Microsoft.CodeAnalysis.Shared.Extensions
         /// </summary>
         public static async Task VerifyNoErrorsAsync(this Document newDocument, string message, CancellationToken cancellationToken, List<string> ignoreErrorCodes = null)
         {
-            bool newDocumentHasErrors = await newDocument.HasAnyErrors(cancellationToken, ignoreErrorCodes).ConfigureAwait(false);
-            Debug.Assert(!newDocumentHasErrors, message);
+            //bool newDocumentHasErrors = await newDocument.HasAnyErrors(cancellationToken, ignoreErrorCodes).ConfigureAwait(false);
+            //Debug.Assert(!newDocumentHasErrors, message);
         }
 #endif
 
