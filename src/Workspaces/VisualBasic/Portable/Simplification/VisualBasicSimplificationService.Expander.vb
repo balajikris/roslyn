@@ -207,7 +207,20 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Simplification
                     Dim targetSymbol = SimplificationHelpers.GetOriginalSymbolInfo(_semanticModel, memberAccess.Name)
 
                     If (Not targetSymbol Is Nothing And targetSymbol.IsReducedExtension()) Then
-                        newInvocationExpression = RewriteExtensionMethodInvocation(node, newInvocationExpression, DirectCast(node.Expression, MemberAccessExpressionSyntax).Expression, DirectCast(newInvocationExpression.Expression, MemberAccessExpressionSyntax).Expression, DirectCast(targetSymbol, IMethodSymbol))
+                        Dim parentingConditionalAccessExpression = node.GetCorrespondingConditionalAccessExpression()
+                        Dim expressionForLeftPart = If(parentingConditionalAccessExpression Is Nothing, node.Expression, parentingConditionalAccessExpression.Expression)
+                        Dim oldThisExpression = If(parentingConditionalAccessExpression Is Nothing,
+                            DirectCast(expressionForLeftPart, MemberAccessExpressionSyntax).Expression,
+                            expressionForLeftPart)
+
+                        Dim newParentingConditionalAccessExpression = newInvocationExpression.GetCorrespondingConditionalAccessExpression()
+                        Dim expressionForNewLeftPart = If(newParentingConditionalAccessExpression Is Nothing, newInvocationExpression.Expression, newParentingConditionalAccessExpression.Expression)
+                        Dim newThisExpression = If(newParentingConditionalAccessExpression Is Nothing,
+                            DirectCast(expressionForNewLeftPart, MemberAccessExpressionSyntax).Expression,
+                            expressionForLeftPart)
+
+                        newInvocationExpression = RewriteExtensionMethodInvocation(node, newInvocationExpression, oldThisExpression, newThisExpression, DirectCast(targetSymbol, IMethodSymbol), True)
+
                     End If
                 End If
 
@@ -219,8 +232,9 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Simplification
             rewrittenNode As InvocationExpressionSyntax,
             oldThisExpression As ExpressionSyntax,
             thisExpression As ExpressionSyntax,
-            reducedExtensionMethod As IMethodSymbol) As InvocationExpressionSyntax
-                Dim expression = RewriteExtensionMethodInvocation(rewrittenNode, oldThisExpression, thisExpression, reducedExtensionMethod, typeNameFormatWithoutGenerics)
+            reducedExtensionMethod As IMethodSymbol,
+            isParentedByConditionalAccessExpression As Boolean) As InvocationExpressionSyntax
+                Dim expression = RewriteExtensionMethodInvocation(rewrittenNode, oldThisExpression, thisExpression, reducedExtensionMethod, typeNameFormatWithoutGenerics, isParentedByConditionalAccessExpression)
 
                 Dim binding = _semanticModel.GetSpeculativeSymbolInfo(originalNode.SpanStart, expression, SpeculativeBindingOption.BindAsExpression)
 
@@ -229,7 +243,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Simplification
                 End If
 
                 ' The previous binding did not work. So we are going to include the type arguments as well
-                Return RewriteExtensionMethodInvocation(rewrittenNode, oldThisExpression, thisExpression, reducedExtensionMethod, typeNameFormatWithGenerics)
+                Return RewriteExtensionMethodInvocation(rewrittenNode, oldThisExpression, thisExpression, reducedExtensionMethod, typeNameFormatWithGenerics, isParentedByConditionalAccessExpression)
             End Function
 
             Private Function RewriteExtensionMethodInvocation(
@@ -237,7 +251,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Simplification
             oldThisExpression As ExpressionSyntax,
             thisExpression As ExpressionSyntax,
             reducedExtensionMethod As IMethodSymbol,
-            symbolDisplayFormat As SymbolDisplayFormat) As InvocationExpressionSyntax
+            symbolDisplayFormat As SymbolDisplayFormat,
+            isParentedByConditionalAccessExpression As Boolean) As InvocationExpressionSyntax
 
                 Dim containingType = reducedExtensionMethod.ContainingType.ToDisplayString(symbolDisplayFormat)
                 Dim oldMemberAccess = DirectCast(originalNode.Expression, MemberAccessExpressionSyntax)
@@ -255,7 +270,9 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Simplification
                     .WithLeadingTrivia(SyntaxTriviaList.Empty) _
                     .WithAdditionalAnnotations(Simplifier.Annotation)
 
-                thisArgument = DirectCast(originalNode.Expression, MemberAccessExpressionSyntax).Expression.CopyAnnotationsTo(thisArgument)
+                thisArgument = If(isParentedByConditionalAccessExpression,
+                    DirectCast(originalNode.Expression, MemberAccessExpressionSyntax).CopyAnnotationsTo(thisArgument),
+                    DirectCast(originalNode.Expression, MemberAccessExpressionSyntax).Expression.CopyAnnotationsTo(thisArgument))
 
                 Dim arguments = originalNode.ArgumentList.Arguments.Insert(0, thisArgument)
                 Dim replacementNode = SyntaxFactory.InvocationExpression(
@@ -377,7 +394,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Simplification
                 Dim symbolForMemberAccess = _semanticModel.GetSymbolInfo(node).Symbol
 
                 If symbolForMemberAccess.IsModuleMember Then
-                    Dim symbolForLeftPart = _semanticModel.GetSymbolInfo(node.Expression).Symbol
+
+                    Dim parentingConditionalAccessExpression = node.GetCorrespondingConditionalAccessExpression()
+                    Dim expressionForLeftPart = If(parentingConditionalAccessExpression Is Nothing, node.Expression, parentingConditionalAccessExpression.Expression)
+                    Dim symbolForLeftPart = _semanticModel.GetSymbolInfo(expressionForLeftPart).Symbol
 
                     If Not symbolForMemberAccess.ContainingType.Equals(symbolForLeftPart) Then
 

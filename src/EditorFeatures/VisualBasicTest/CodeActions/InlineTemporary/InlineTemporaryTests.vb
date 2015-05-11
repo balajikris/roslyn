@@ -3938,5 +3938,50 @@ End Class
 
             Test(code, expected, compareTokens:=False)
         End Sub
+
+        <Fact, Trait(Traits.Feature, Traits.Features.CodeActionsInlineTemporary)>
+        Public Sub KBTest()
+            Dim code =
+<File>
+Imports System.Runtime.CompilerServices
+Module M
+    &lt;Extension()&gt;
+    Public Function Something(cust As C) As IEnumerable(Of String)
+        Throw New NotImplementedException()
+    End Function
+End Module
+Class C
+    Private Function GetAssemblyIdentity(types As IEnumerable(Of C)) As Object
+        For Each t In types
+            Dim [|assembly|] = t.Something().First()
+            Dim identity = assembly?.ToArray()
+        Next
+        Return Nothing
+    End Function
+End Class
+</File>
+
+            Dim expected =
+<File>
+Imports System.Runtime.CompilerServices
+Module M
+    &lt;Extension()&gt;
+    Public Function Something(cust As C) As IEnumerable(Of String)
+        Throw New NotImplementedException()
+    End Function
+End Module
+Class C
+    Private Function GetAssemblyIdentity(types As IEnumerable(Of C)) As Object
+        For Each t In types
+            Dim identity = t.Something().First()?.ToArray()
+        Next
+        Return Nothing
+    End Function
+End Class
+</File>
+
+            Test(code, expected, compareTokens:=False)
+        End Sub
+
     End Class
 End Namespace
