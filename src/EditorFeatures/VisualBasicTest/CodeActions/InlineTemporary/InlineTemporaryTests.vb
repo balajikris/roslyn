@@ -3943,7 +3943,10 @@ End Class
         Public Sub KBTest()
             Dim code =
 <File>
+Imports System.Collections.Generic
+Imports System.Linq
 Imports System.Runtime.CompilerServices
+
 Module M
     &lt;Extension()&gt;
     Public Function Something(cust As C) As IEnumerable(Of String)
@@ -3963,7 +3966,10 @@ End Class
 
             Dim expected =
 <File>
+Imports System.Collections.Generic
+Imports System.Linq
 Imports System.Runtime.CompilerServices
+
 Module M
     &lt;Extension()&gt;
     Public Function Something(cust As C) As IEnumerable(Of String)
