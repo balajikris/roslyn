@@ -510,6 +510,54 @@ public static class ProgramExtensions
 
             Test(input, expected)
         End Sub
+        <Fact, Trait(Traits.Feature, Traits.Features.Expansion)>
+        Public Sub CSharp_ExpandSingleExtensionMethodAfterConditionalAccessExpression()
+            Dim input =
+<Workspace>
+    <Project Language="C#" CommonReferences="true">
+        <Document>
+public class Program
+{
+    static void Main(string[] args)
+    {
+        Program ss = null;
+        Program s = {|Expand:ss?.foo()|};
+    }
+}
+
+public static class ProgramExtensions
+{
+    public static Program foo(this Program p)
+    {
+        return p;
+    }
+}
+        </Document>
+    </Project>
+</Workspace>
+
+            Dim expected =
+<code>
+public class Program
+{
+    static void Main(string[] args)
+    {
+        Program ss = null;
+        Program s = global::ProgramExtensions.foo(ss);
+    }
+}
+
+public static class ProgramExtensions
+{
+    public static Program foo(this Program p)
+    {
+        return p;
+    }
+}
+</code>
+
+            Test(input, expected)
+        End Sub
 
         <Fact, Trait(Traits.Feature, Traits.Features.Expansion)>
         Public Sub CSharp_ExpandSingleExtensionMethodWithArgument()
