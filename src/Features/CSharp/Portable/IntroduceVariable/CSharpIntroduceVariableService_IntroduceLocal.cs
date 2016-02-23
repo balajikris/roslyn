@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.CodeStyle.TypingStyle;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
@@ -121,25 +122,21 @@ namespace Microsoft.CodeAnalysis.CSharp.IntroduceVariable
 
         private TypeSyntax GetTypeSyntax(SemanticDocument document, ExpressionSyntax expression, bool isConstant, OptionSet options, CancellationToken cancellationToken)
         {
+            var typingStyleService = document.Project.LanguageServices.GetService<ITypingStyleService>();
+
+            // TODO: balajik, the service should hopefully handle this case as well.?
             var typeSymbol = GetTypeSymbol(document, expression, cancellationToken);
             if (typeSymbol.ContainsAnonymousType())
             {
                 return SyntaxFactory.IdentifierName("var");
             }
 
-            if (!isConstant && options.GetOption(CSharpCodeStyleOptions.UseVarWhenDeclaringLocals) && CanUseVar(typeSymbol))
+            if (!isConstant && typingStyleService.ShouldUseImplicitTyping(expression, document.SemanticModel, options, cancellationToken))
             {
                 return SyntaxFactory.IdentifierName("var");
             }
 
             return typeSymbol.GenerateTypeSyntax();
-        }
-
-        private bool CanUseVar(ITypeSymbol typeSymbol)
-        {
-            return typeSymbol.TypeKind != TypeKind.Delegate
-                && !typeSymbol.IsErrorType()
-                && !typeSymbol.IsFormattableString();
         }
 
         private static async Task<Tuple<SemanticDocument, ISet<ExpressionSyntax>>> ComplexifyParentingStatements(

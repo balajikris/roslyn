@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeGeneration;
+using Microsoft.CodeAnalysis.CodeStyle.TypingStyle;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -50,7 +51,13 @@ namespace Microsoft.CodeAnalysis.GenerateMember.GenerateVariable
             private SyntaxNode GetNewRoot(CancellationToken cancellationToken)
             {
                 SyntaxNode newRoot;
-                if (_service.TryConvertToLocalDeclaration(_state.LocalType, _state.IdentifierToken, _document.Project.Solution.Workspace.Options, out newRoot))
+                if (_service.TryConvertToLocalDeclaration(_state.LocalType,
+                    _state.IdentifierToken,
+                    _document.Project.Solution.Workspace.Options,
+                    _document.Project.LanguageServices.GetService<ITypingStyleService>(),
+                    _document.GetSemanticModelAsync(cancellationToken).WaitAndGetResult(cancellationToken),
+                    cancellationToken,
+                    out newRoot))
                 {
                     return newRoot;
                 }

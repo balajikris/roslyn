@@ -4,6 +4,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeStyle.TypingStyle;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -129,7 +130,7 @@ namespace Microsoft.CodeAnalysis.CSharp.GenerateMember.GenerateVariable
             return expression.CanReplaceWithLValue(document.SemanticModel, cancellationToken);
         }
 
-        protected override bool TryConvertToLocalDeclaration(ITypeSymbol type, SyntaxToken identifierToken, OptionSet options, out SyntaxNode newRoot)
+        protected override bool TryConvertToLocalDeclaration(ITypeSymbol type, SyntaxToken identifierToken, OptionSet options, ITypingStyleService typingStyleService, SemanticModel semanticModel, CancellationToken cancellationToken, out SyntaxNode newRoot)
         {
             var token = identifierToken;
             var node = identifierToken.Parent as IdentifierNameSyntax;
@@ -140,7 +141,7 @@ namespace Microsoft.CodeAnalysis.CSharp.GenerateMember.GenerateVariable
 
                 var declarationStatement = SyntaxFactory.LocalDeclarationStatement(
                     SyntaxFactory.VariableDeclaration(
-                        GenerateTypeSyntax(type, options),
+                        GenerateTypeSyntax(type, options, assignExpression, semanticModel, typingStyleService, cancellationToken),
                         SyntaxFactory.SingletonSeparatedList(
                             SyntaxFactory.VariableDeclarator(token, null, SyntaxFactory.EqualsValueClause(
                                 assignExpression.OperatorToken, assignExpression.Right)))));
@@ -156,9 +157,9 @@ namespace Microsoft.CodeAnalysis.CSharp.GenerateMember.GenerateVariable
             return false;
         }
 
-        private static TypeSyntax GenerateTypeSyntax(ITypeSymbol type, OptionSet options)
+        private static TypeSyntax GenerateTypeSyntax(ITypeSymbol type, OptionSet options, ExpressionSyntax initializer, SemanticModel semanticModel, ITypingStyleService typingStyleService, CancellationToken cancellationToken)
         {
-            return type.ContainsAnonymousType() || (options.GetOption(CSharpCodeStyleOptions.UseVarWhenDeclaringLocals) && type.TypeKind != TypeKind.Delegate)
+            return type.ContainsAnonymousType() || typingStyleService.ShouldUseImplicitTyping(initializer, semanticModel, options, cancellationToken)
                 ? SyntaxFactory.IdentifierName("var")
                 : type.GenerateTypeSyntax();
         }
