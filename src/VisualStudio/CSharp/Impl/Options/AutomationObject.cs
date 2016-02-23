@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Runtime.InteropServices;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.Completion;
@@ -457,6 +459,45 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
             set { SetBooleanOption(CSharpCodeStyleOptions.UseVarWhenDeclaringLocals, value); }
         }
 
+        public int Style_UseVarWherePossible
+        {
+            get
+            {
+                var option = _optionService.GetOption(CSharpCodeStyleOptions.UseVarWherePossible);
+                return GetUseVarOption(option);
+            }
+            set
+            {
+                SetUseVarOption(CSharpCodeStyleOptions.UseVarWherePossible, value);
+            }
+        }
+
+        public int Style_UseVarWhenTypeIsApparent
+        {
+            get
+            {
+                var option = _optionService.GetOption(CSharpCodeStyleOptions.UseVarWhenTypeIsApparent);
+                return GetUseVarOption(option);
+            }
+            set
+            {
+                SetUseVarOption(CSharpCodeStyleOptions.UseVarWhenTypeIsApparent, value);
+            }
+        }
+
+        public int Style_UseVarForIntrinsicTypes
+        {
+            get
+            {
+                var option = _optionService.GetOption(CSharpCodeStyleOptions.UseVarForIntrinsicTypes);
+                return GetUseVarOption(option);
+            }
+            set
+            {
+                SetUseVarOption(CSharpCodeStyleOptions.UseVarForIntrinsicTypes, value);
+            }
+        }
+
         public int WarnOnBuildErrors
         {
             get { return GetBooleanOption(OrganizerOptions.WarnOnBuildErrors); }
@@ -518,6 +559,53 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
         {
             var optionSet = _optionService.GetOptions();
             optionSet = optionSet.WithChangedOption(key, LanguageNames.CSharp, value != 0);
+            _optionService.SetOptions(optionSet);
+        }
+
+        private static int GetUseVarOption(SimpleCodeStyleOption option)
+        {
+            var offset = option.IsChecked ? 0 : Enum.GetValues(typeof(DiagnosticSeverity)).Length;
+            var baseValue = (int)option.Notification.Value;
+
+            return offset + baseValue;
+        }
+
+        private void SetUseVarOption(Option<SimpleCodeStyleOption> option, int value)
+        {
+            SimpleCodeStyleOption convertedValue = SimpleCodeStyleOption.Default;
+
+            var optionSet = _optionService.GetOptions();
+            switch (value)
+            {
+                case 0:
+                    convertedValue = new SimpleCodeStyleOption(true, NotificationOption.None);
+                    break;
+                case 1:
+                    convertedValue = new SimpleCodeStyleOption(true, NotificationOption.Info);
+                    break;
+                case 2:
+                    convertedValue = new SimpleCodeStyleOption(true, NotificationOption.Warning);
+                    break;
+                case 3:
+                    convertedValue = new SimpleCodeStyleOption(true, NotificationOption.Error);
+                    break;
+                case 4:
+                    convertedValue = new SimpleCodeStyleOption(false, NotificationOption.None);
+                    break;
+                case 5:
+                    convertedValue = new SimpleCodeStyleOption(false, NotificationOption.Info);
+                    break;
+                case 6:
+                    convertedValue = new SimpleCodeStyleOption(false, NotificationOption.Warning);
+                    break;
+                case 7:
+                    convertedValue = new SimpleCodeStyleOption(false, NotificationOption.Error);
+                    break;
+                default:
+                    break;
+            }
+
+            optionSet = optionSet.WithChangedOption(option, convertedValue);
             _optionService.SetOptions(optionSet);
         }
     }

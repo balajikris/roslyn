@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.Completion;
@@ -57,6 +58,9 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
         private const string SpaceAroundBinaryOperator = nameof(AutomationObject.Space_AroundBinaryOperator);
         private const string UnindentLabels = nameof(AutomationObject.Indent_UnindentLabels);
         private const string FlushLabelsLeft = nameof(AutomationObject.Indent_FlushLabelsLeft);
+        private const string Style_UseVarForIntrinsicTypes = nameof(AutomationObject.Style_UseVarForIntrinsicTypes);
+        private const string Style_UseVarWhenTypeIsApparent = nameof(AutomationObject.Style_UseVarWhenTypeIsApparent);
+        private const string Style_UseVarWherePossible = nameof(AutomationObject.Style_UseVarWherePossible);
 
         private KeyValuePair<string, IOption> GetOptionInfoForOnOffOptions(FieldInfo fieldInfo)
         {
@@ -206,8 +210,26 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
                 return true;
             }
 
+            // code style: use var options.
+            if (optionKey.Option == CSharpCodeStyleOptions.UseVarForIntrinsicTypes)
+            {
+                var useVarValue = this.Manager.GetValueOrDefault(Style_UseVarForIntrinsicTypes, defaultValue: 0);
+                return FetchUseVarOption(useVarValue, out value);
+            }
+            else if (optionKey.Option == CSharpCodeStyleOptions.UseVarWhenTypeIsApparent)
+            {
+                var useVarValue = this.Manager.GetValueOrDefault(Style_UseVarWhenTypeIsApparent, defaultValue: 0);
+                return FetchUseVarOption(useVarValue, out value);
+            }
+            else if (optionKey.Option == CSharpCodeStyleOptions.UseVarWherePossible)
+            {
+                var useVarValue = this.Manager.GetValueOrDefault(Style_UseVarWherePossible, defaultValue: 0);
+                return FetchUseVarOption(useVarValue, out value);
+            }
+
             return base.TryFetch(optionKey, out value);
         }
+
 
         public override bool TryPersist(OptionKey optionKey, object value)
         {
@@ -274,7 +296,67 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
                 }
             }
 
+            // code style: use var options.
+            if (optionKey.Option == CSharpCodeStyleOptions.UseVarForIntrinsicTypes)
+            {
+                return PersistUseVarOption(Style_UseVarForIntrinsicTypes, value);
+            }
+            else if (optionKey.Option == CSharpCodeStyleOptions.UseVarWhenTypeIsApparent)
+            {
+                return PersistUseVarOption(Style_UseVarWhenTypeIsApparent, value);
+            }
+            else if (optionKey.Option == CSharpCodeStyleOptions.UseVarWherePossible)
+            {
+                return PersistUseVarOption(Style_UseVarWherePossible, value);
+            }
+
             return base.TryPersist(optionKey, value);
+        }
+
+        private bool PersistUseVarOption(string option, object value)
+        {
+            var convertedValue = (SimpleCodeStyleOption)value;
+            var offset = convertedValue.IsChecked ? 0 : Enum.GetValues(typeof(DiagnosticSeverity)).Length;
+            var baseValue = (int)convertedValue.Notification.Value;
+
+            this.Manager.SetValueAsync(option, value: baseValue + offset, isMachineLocal: false);
+            return true;
+        }
+
+        private static bool FetchUseVarOption(int useVarOptionValue, out object value)
+        {
+            switch (useVarOptionValue)
+            {
+                case 0:
+                    value = new SimpleCodeStyleOption(true, NotificationOption.None);
+                    break;
+                case 1:
+                    value = new SimpleCodeStyleOption(true, NotificationOption.Info);
+                    break;
+                case 2:
+                    value = new SimpleCodeStyleOption(true, NotificationOption.Warning);
+                    break;
+                case 3:
+                    value = new SimpleCodeStyleOption(true, NotificationOption.Error);
+                    break;
+                case 4:
+                    value = new SimpleCodeStyleOption(false, NotificationOption.None);
+                    break;
+                case 5:
+                    value = new SimpleCodeStyleOption(false, NotificationOption.Info);
+                    break;
+                case 6:
+                    value = new SimpleCodeStyleOption(false, NotificationOption.Warning);
+                    break;
+                case 7:
+                    value = new SimpleCodeStyleOption(false, NotificationOption.Error);
+                    break;
+                default:
+                    value = null;
+                    break;
+            }
+
+            return value != null;
         }
     }
 }
