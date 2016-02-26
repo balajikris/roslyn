@@ -925,7 +925,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use &apos;var&apos; for built-in types.
+        ///   Looks up a localized string similar to For built-in types.
         /// </summary>
         internal static string UseVarForIntrinsicTypes {
             get {
@@ -943,7 +943,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use &apos;var&apos; elsewhere.
+        ///   Looks up a localized string similar to Elsewhere.
         /// </summary>
         internal static string UseVarWhenPossible {
             get {
@@ -952,7 +952,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use &apos;var&apos; when typing is apparent.
+        ///   Looks up a localized string similar to When variable type is apparent.
         /// </summary>
         internal static string UseVarWhenTypeIsApparent {
             get {
