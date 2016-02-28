@@ -14,7 +14,12 @@ using Microsoft.VisualStudio.LanguageServices.Implementation.Options;
 
 namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options.Formatting
 {
-    // Must work with GridOptionPreviewControl
+    /// <summary>
+    /// This is the view model for CodeStyle options page.
+    /// </summary>
+    /// <remarks>
+    /// The codestyle options page is defined in GridOptionPreviewControl.xaml
+    /// </remarks>
     internal class StyleViewModel : AbstractOptionPreviewViewModel
     {
         public ObservableCollection<AbstractCodeStyleOptionViewModel> CodeStyleItems { get; set; }
