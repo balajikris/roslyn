@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options.Formatting
     /// This is the view model for CodeStyle options page.
     /// </summary>
     /// <remarks>
-    /// The codestyle options page is defined in GridOptionPreviewControl.xaml
+    /// The codestyle options page is defined in <see cref="CodeStylePage"/>
     /// </remarks>
     internal class StyleViewModel : AbstractOptionPreviewViewModel
     {
