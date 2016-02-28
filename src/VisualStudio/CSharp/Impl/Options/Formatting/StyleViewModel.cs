@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Windows.Data;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.CodeStyle;
@@ -15,7 +17,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options.Formatting
     // Must work with GridOptionPreviewControl
     internal class StyleViewModel : AbstractOptionPreviewViewModel
     {
-        public List<SimpleCodeStyleOptionViewModel> CodeStyleItems { get; set; }
+        public ObservableCollection<SimpleCodeStyleOptionViewModel> CodeStyleItems { get; set; }
 
         internal override bool ShouldPersistOption(OptionKey key)
         {
@@ -181,14 +183,17 @@ class C{
         {
 
 
-            CodeStyleItems = new List<SimpleCodeStyleOptionViewModel>();
+            CodeStyleItems = new ObservableCollection<SimpleCodeStyleOptionViewModel>();
+
+            ListCollectionView collectionView = (ListCollectionView)CollectionViewSource.GetDefaultView(CodeStyleItems);
+            collectionView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(SimpleCodeStyleOptionViewModel.GroupName)));
 
             //this works:
-            // CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(SimplificationOptions.QualifyMemberAccessWithThisOrMe, CSharpVSResources.QualifyMemberAccessWithThis, s_declarationPreviewTrue, s_declarationPreviewFalse, this, optionSet));
-            // CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInDeclaration, CSharpVSResources.PreferIntrinsicPredefinedTypeKeywordInDeclaration, s_intrinsicPreviewDeclarationTrue, s_intrinsicPreviewDeclarationFalse, this, optionSet));
-            // CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInMemberAccess, CSharpVSResources.PreferIntrinsicPredefinedTypeKeywordInMemberAccess, s_intrinsicPreviewMemberAccessTrue, s_intrinsicPreviewMemberAccessFalse, this, optionSet));
-
-            CodeStyleItems.Add(SimpleCodeStyleOptionViewModel.Header("'var' preferences"));
+            //CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(SimplificationOptions.QualifyMemberAccessWithThisOrMe, CSharpVSResources.QualifyMemberAccessWithThis, s_declarationPreviewTrue, s_declarationPreviewFalse, this, optionSet));
+            //CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInDeclaration, CSharpVSResources.PreferIntrinsicPredefinedTypeKeywordInDeclaration, s_intrinsicPreviewDeclarationTrue, s_intrinsicPreviewDeclarationFalse, this, optionSet));
+            //CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInMemberAccess, CSharpVSResources.PreferIntrinsicPredefinedTypeKeywordInMemberAccess, s_intrinsicPreviewMemberAccessTrue, s_intrinsicPreviewMemberAccessFalse, this, optionSet));
+            
+            //CodeStyleItems.Add(SimpleCodeStyleOptionViewModel.Header("'var' preferences"));
 
             var useVarPreferences = new List<CodeStylePreference>
             {
@@ -196,10 +201,11 @@ class C{
                 new CodeStylePreference("Prefer 'var'", true),
                 new CodeStylePreference("Prefer explicit type", false),
             };
+            const string varGroupTitle = "'var' preferences:";
 
-            CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(CSharpCodeStyleOptions.UseImplicitTypeForIntrinsicTypes, CSharpVSResources.UseVarForIntrinsicTypes, s_varForIntrinsicsPreviewTrue, s_varForIntrinsicsPreviewFalse, this, optionSet, useVarPreferences));
-            CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(CSharpCodeStyleOptions.UseImplicitTypeWhereApparent, CSharpVSResources.UseVarWhenTypeIsApparent, s_varWhereApparentPreviewTrue, s_varWhereApparentPreviewFalse, this, optionSet, useVarPreferences));
-            CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(CSharpCodeStyleOptions.UseImplicitTypeWherePossible, CSharpVSResources.UseVarWhenPossible, s_varWherePossiblePreviewTrue, s_varWherePossiblePreviewFalse, this, optionSet, useVarPreferences));
+            CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(CSharpCodeStyleOptions.UseImplicitTypeForIntrinsicTypes, CSharpVSResources.UseVarForIntrinsicTypes, s_varForIntrinsicsPreviewTrue, s_varForIntrinsicsPreviewFalse, this, optionSet, varGroupTitle, useVarPreferences));
+            CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(CSharpCodeStyleOptions.UseImplicitTypeWhereApparent, CSharpVSResources.UseVarWhenTypeIsApparent, s_varWhereApparentPreviewTrue, s_varWhereApparentPreviewFalse, this, optionSet, varGroupTitle, useVarPreferences));
+            CodeStyleItems.Add(new SimpleCodeStyleOptionViewModel(CSharpCodeStyleOptions.UseImplicitTypeWherePossible, CSharpVSResources.UseVarWhenPossible, s_varWherePossiblePreviewTrue, s_varWherePossiblePreviewFalse, this, optionSet, varGroupTitle, useVarPreferences));
 
             //trying this:
             //CodeStyleItems.Add(new StyleOptionViewModel(new CodeStyleItem(CSharpVSResources.UseVarForIntrinsicTypes, defaultPreferences)));

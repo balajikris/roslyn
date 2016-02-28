@@ -62,6 +62,29 @@
                     <Setter Property="Height" Value="Auto"/>
                 </Style>
             </DataGrid.RowStyle>-->
+            <DataGrid.Resources>
+                <Style x:Key="GroupHeaderStyle" TargetType="{x:Type GroupItem}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type GroupItem}">
+                                <StackPanel>
+                                    <TextBlock Margin="5" Text="{Binding Name}"/>
+                                    <ItemsPresenter/>
+                                </StackPanel>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.Resources>
+            <DataGrid.GroupStyle>
+                <GroupStyle ContainerStyle="{StaticResource GroupHeaderStyle}">
+                    <GroupStyle.Panel>
+                        <ItemsPanelTemplate>
+                            <DataGridRowsPresenter/>
+                        </ItemsPanelTemplate>
+                    </GroupStyle.Panel>
+                </GroupStyle>
+            </DataGrid.GroupStyle>
             <DataGrid.Columns>
                 <!--TODO: Set width and wrapping? -->
                 <!--TODO: text alignment and font?-->

@@ -15,6 +15,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options.Convert
         public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             return null;
+            //throw new NotSupportedException();
         }
     }
 }
