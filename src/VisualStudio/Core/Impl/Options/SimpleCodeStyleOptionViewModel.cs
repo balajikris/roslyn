@@ -9,7 +9,6 @@ using Microsoft.VisualStudio.LanguageServices.Implementation.Utilities;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options
 {
-
     // I'm a row in this table.
     internal class SimpleCodeStyleOptionViewModel : AbstractNotifyPropertyChanged
     {
@@ -63,10 +62,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options
         protected AbstractOptionPreviewViewModel Info { get; }
         public IOption Option { get; }
 
-        public static SimpleCodeStyleOptionViewModel Header(string text)
-        {
-            return new SimpleCodeStyleOptionViewModel(text);
-        }
+        //public static SimpleCodeStyleOptionViewModel Header(string text)
+        //{
+        //    return new SimpleCodeStyleOptionViewModel(text);
+        //}
 
         internal virtual string GetPreview() => _selectedPreference.IsChecked ? _truePreview : _falsePreview;
 
@@ -75,16 +74,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options
         //{
         //}
 
-        private SimpleCodeStyleOptionViewModel(string header)
-        {
-            Description = header;
-            Preferences = GetDefaultPreferences();
-            NotificationPreferences = GetDefaultNotifications();
-            _selectedPreference = null;
-            _selectedNotificationPreference = null;
-            IsVisible = false;
-            DescriptionMargin = default(double);
-        }
+        //private SimpleCodeStyleOptionViewModel(string header)
+        //{
+        //    Description = header;
+        //    Preferences = GetDefaultPreferences();
+        //    NotificationPreferences = GetDefaultNotifications();
+        //    _selectedPreference = null;
+        //    _selectedNotificationPreference = null;
+        //    IsVisible = false;
+        //    DescriptionMargin = default(double);
+        //}
 
         public SimpleCodeStyleOptionViewModel(
             IOption option,
