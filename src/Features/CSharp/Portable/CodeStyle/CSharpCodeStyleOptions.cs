@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Options.CodeStyle;
 
 namespace Microsoft.CodeAnalysis.CSharp.CodeStyle
 {

@@ -2,8 +2,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Options.CodeStyle;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation.Options
 {

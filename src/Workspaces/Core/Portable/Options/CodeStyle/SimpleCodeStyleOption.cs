@@ -3,7 +3,7 @@
 using System;
 using System.Xml.Linq;
 
-namespace Microsoft.CodeAnalysis.CodeStyle
+namespace Microsoft.CodeAnalysis.Options.CodeStyle
 {
     /// <summary>
     /// Represents a code style option that typically 
