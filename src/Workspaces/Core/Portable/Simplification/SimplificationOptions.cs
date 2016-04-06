@@ -2,6 +2,7 @@
 
 using System;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Options.CodeStyle;
 
 namespace Microsoft.CodeAnalysis.Simplification
 {
@@ -74,7 +75,7 @@ namespace Microsoft.CodeAnalysis.Simplification
         /// <summary>
         /// This option says if we should prefer keyword for Intrinsic Predefined Types in Declarations
         /// </summary>
-        public static PerLanguageOption<bool> PreferIntrinsicPredefinedTypeKeywordInDeclaration { get; } = new PerLanguageOption<bool>(PerLanguageFeatureName, "PreferIntrinsicPredefinedTypeKeywordInDeclaration", defaultValue: true);
+        public static PerLanguageOption<SimpleCodeStyleOption> PreferIntrinsicPredefinedTypeKeywordInDeclaration { get; } = new PerLanguageOption<SimpleCodeStyleOption>(PerLanguageFeatureName, "PreferIntrinsicPredefinedTypeKeywordInDeclaration", defaultValue: SimpleCodeStyleOption.Default);
 
         /// <summary>
         /// This option says if we should prefer keyword for Intrinsic Predefined Types in Member Access Expression

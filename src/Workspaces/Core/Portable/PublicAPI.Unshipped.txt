@@ -26,14 +26,32 @@ Microsoft.CodeAnalysis.Editing.OperatorKind.True = 23 -> Microsoft.CodeAnalysis.
 Microsoft.CodeAnalysis.Editing.OperatorKind.UnaryNegation = 24 -> Microsoft.CodeAnalysis.Editing.OperatorKind
 Microsoft.CodeAnalysis.Editing.OperatorKind.UnaryPlus = 25 -> Microsoft.CodeAnalysis.Editing.OperatorKind
 Microsoft.CodeAnalysis.Editing.SyntaxGenerator.OperatorDeclaration(Microsoft.CodeAnalysis.IMethodSymbol method, System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.SyntaxNode> statements = null) -> Microsoft.CodeAnalysis.SyntaxNode
+Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption
+Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Name.get -> string
+Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Name.set -> void
+Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Value.get -> Microsoft.CodeAnalysis.DiagnosticSeverity
+Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Value.set -> void
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.IsChecked.get -> bool
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.IsChecked.set -> void
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.Notification.get -> Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.Notification.set -> void
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.SimpleCodeStyleOption(bool isChecked, Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption notification) -> void
+Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.ToXElement() -> System.Xml.Linq.XElement
 abstract Microsoft.CodeAnalysis.Editing.SyntaxGenerator.NameOfExpression(Microsoft.CodeAnalysis.SyntaxNode expression) -> Microsoft.CodeAnalysis.SyntaxNode
+override Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.ToString() -> string
 static Microsoft.CodeAnalysis.FindSymbols.SymbolFinder.FindDerivedClassesAsync(Microsoft.CodeAnalysis.INamedTypeSymbol type, Microsoft.CodeAnalysis.Solution solution, System.Collections.Immutable.IImmutableSet<Microsoft.CodeAnalysis.Project> projects = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.INamedTypeSymbol>>
 static Microsoft.CodeAnalysis.FindSymbols.SymbolFinder.FindSymbolAtPositionAsync(Microsoft.CodeAnalysis.SemanticModel semanticModel, int position, Microsoft.CodeAnalysis.Workspace workspace, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.CodeAnalysis.ISymbol>
+static Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.FromXElement(System.Xml.Linq.XElement element) -> Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption
 static Microsoft.CodeAnalysis.Recommendations.Recommender.GetRecommendedSymbolsAtPositionAsync(Microsoft.CodeAnalysis.SemanticModel semanticModel, int position, Microsoft.CodeAnalysis.Workspace workspace, Microsoft.CodeAnalysis.Options.OptionSet options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.ISymbol>>
-virtual Microsoft.CodeAnalysis.Editing.SyntaxGenerator.OperatorDeclaration(Microsoft.CodeAnalysis.Editing.OperatorKind kind, System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.SyntaxNode> parameters = null, Microsoft.CodeAnalysis.SyntaxNode returnType = null, Microsoft.CodeAnalysis.Accessibility accessibility = Microsoft.CodeAnalysis.Accessibility.NotApplicable, Microsoft.CodeAnalysis.Editing.DeclarationModifiers modifiers = default(Microsoft.CodeAnalysis.Editing.DeclarationModifiers), System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.SyntaxNode> statements = null) -> Microsoft.CodeAnalysis.SyntaxNode
 static Microsoft.CodeAnalysis.Simplification.SimplificationOptions.NamingPreferences.get -> Microsoft.CodeAnalysis.Options.PerLanguageOption<string>
 static Microsoft.CodeAnalysis.Simplification.SimplificationOptions.QualifyEventAccess.get -> Microsoft.CodeAnalysis.Options.PerLanguageOption<bool>
 static Microsoft.CodeAnalysis.Simplification.SimplificationOptions.QualifyFieldAccess.get -> Microsoft.CodeAnalysis.Options.PerLanguageOption<bool>
 static Microsoft.CodeAnalysis.Simplification.SimplificationOptions.QualifyMethodAccess.get -> Microsoft.CodeAnalysis.Options.PerLanguageOption<bool>
 static Microsoft.CodeAnalysis.Simplification.SimplificationOptions.QualifyPropertyAccess.get -> Microsoft.CodeAnalysis.Options.PerLanguageOption<bool>
-
+static readonly Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Error -> Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption
+static readonly Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Info -> Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption
+static readonly Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.None -> Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption
+static readonly Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption.Warning -> Microsoft.CodeAnalysis.Options.CodeStyle.NotificationOption
+static readonly Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption.Default -> Microsoft.CodeAnalysis.Options.CodeStyle.SimpleCodeStyleOption
+virtual Microsoft.CodeAnalysis.Editing.SyntaxGenerator.OperatorDeclaration(Microsoft.CodeAnalysis.Editing.OperatorKind kind, System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.SyntaxNode> parameters = null, Microsoft.CodeAnalysis.SyntaxNode returnType = null, Microsoft.CodeAnalysis.Accessibility accessibility = Microsoft.CodeAnalysis.Accessibility.NotApplicable, Microsoft.CodeAnalysis.Editing.DeclarationModifiers modifiers = default(Microsoft.CodeAnalysis.Editing.DeclarationModifiers), System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.SyntaxNode> statements = null) -> Microsoft.CodeAnalysis.SyntaxNode
