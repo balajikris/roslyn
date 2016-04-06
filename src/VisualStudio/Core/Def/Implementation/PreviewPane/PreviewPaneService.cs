@@ -146,7 +146,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PreviewPane
                     return Guid.Parse(Guids.VisualBasicOptionPageNamingStyleIdString);
                 }
             }
-            else if (optionName == nameof(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInMemberAccess))
+            else if (IsCodeStyleOption(optionName))
             {
                 if (optionLanguage == LanguageNames.CSharp)
                 {
@@ -159,6 +159,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PreviewPane
             }
 
             return default(Guid);
+        }
+
+        private bool IsCodeStyleOption(string optionName)
+        {
+            return optionName == nameof(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInMemberAccess) ||
+                   optionName == nameof(SimplificationOptions.PreferIntrinsicPredefinedTypeKeywordInDeclaration) ||
+                   optionName == nameof(SimplificationOptions.QualifyEventAccess) ||
+                   optionName == nameof(SimplificationOptions.QualifyFieldAccess) ||
+                   optionName == nameof(SimplificationOptions.QualifyMethodAccess) ||
+                   optionName == nameof(SimplificationOptions.QualifyPropertyAccess);
         }
     }
 }
