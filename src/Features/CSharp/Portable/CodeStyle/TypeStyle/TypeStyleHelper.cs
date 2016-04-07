@@ -104,11 +104,39 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeStyle.TypeStyle
                 return true;
             }
 
-            // other Conversion cases:
+            // checks based on member and its containing type.
+            SimpleNameSyntax memberName = null;
+
+            // member access expression cases:
+            //      Color c = Colors.Blue;
+            //      Brush b = SystemBrushes.Background;
+            if (initializerExpression.IsKind(SyntaxKind.SimpleMemberAccessExpression))
+            {
+                // what about pointermemberaccessexpression?
+
+                memberName = initializerExpression.GetRightmostName();
+                if (memberName == null)
+                {
+                    return false;
+                }
+
+                var memberTypeInfo = semanticModel.GetTypeInfo(initializerExpression, cancellationToken);
+                if (memberTypeInfo.Type == null)
+                {
+                    // there is an implicit conversion (&& memberTypeInfo.ConvertedType != null)
+                    return false;
+                }
+
+                var containingType = semanticModel.GetTypeInfo(memberName.GetLeftSideOfDot(), cancellationToken).Type;
+
+                return IsTypeApparentInMemberAccessExpression(memberTypeInfo.Type, containingType, typeInDeclaration);
+            }
+
+            // invocation expression cases:
             //      a. conversion with helpers like: int.Parse methods
             //      b. types that implement IConvertible and then invoking .ToType()
             //      c. System.Convert.Totype()
-            var memberName = GetRightmostInvocationExpression(initializerExpression).GetRightmostName();
+            memberName = GetRightmostInvocationExpression(initializerExpression).GetRightmostName();
             if (memberName == null)
             {
                 return false;
@@ -150,8 +178,8 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeStyle.TypeStyle
         /// Looks for types that have static methods that return the same type as the container.
         /// e.g: int.Parse, XElement.Load, Tuple.Create etc.
         /// </summary>
-        private static bool IsPossibleCreationMethod(IMethodSymbol methodSymbol, 
-            ITypeSymbol typeInDeclaration, 
+        private static bool IsPossibleCreationMethod(IMethodSymbol methodSymbol,
+            ITypeSymbol typeInDeclaration,
             ITypeSymbol containingType)
         {
             if (!methodSymbol.IsStatic)
@@ -166,10 +194,10 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeStyle.TypeStyle
         /// If we have a method ToXXX and its return type is also XXX, then type name is apparent
         /// e.g: Convert.ToString.
         /// </summary>
-        private static bool IsPossibleConversionMethod(IMethodSymbol methodSymbol, 
-            ITypeSymbol typeInDeclaration, 
-            ITypeSymbol containingType, 
-            SemanticModel semanticModel, 
+        private static bool IsPossibleConversionMethod(IMethodSymbol methodSymbol,
+            ITypeSymbol typeInDeclaration,
+            ITypeSymbol containingType,
+            SemanticModel semanticModel,
             CancellationToken cancellationToken)
         {
             var returnType = methodSymbol.ReturnType;
@@ -180,14 +208,18 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeStyle.TypeStyle
             return methodSymbol.Name.Equals("To" + returnTypeName, StringComparison.Ordinal);
         }
 
+        /// <summary>
+        /// tests if the type containing the method is the same as the type returned by the method symbol.
+        /// </summary>
         /// <remarks>
         /// If there are type arguments on either side of assignment, we match type names instead of type equality 
         /// to account for inferred generic type arguments.
         /// e.g: Tuple.Create(0, true) returns Tuple&lt;X,y&gt; which isn't the same as type Tuple.
-        /// otherwise, we match for type equivalence
+        /// Note that working with OriginalDefinition is not sufficient for this case, since these are primarily different types.
+        /// otherwise, we match for type equivalence.
         /// </remarks>
-        private static bool IsContainerTypeEqualToReturnType(IMethodSymbol methodSymbol, 
-            ITypeSymbol typeInDeclaration, 
+        private static bool IsContainerTypeEqualToReturnType(IMethodSymbol methodSymbol,
+            ITypeSymbol typeInDeclaration,
             ITypeSymbol containingType)
         {
             var returnType = methodSymbol.ReturnType;
@@ -201,6 +233,18 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeStyle.TypeStyle
             {
                 return containingType.Equals(returnType);
             }
+        }
+
+        // TODO: Test this heuristic on some framework assembly,
+        // say the wpf one that has colors and brushes and see how many mishits we get.
+        private static bool IsTypeApparentInMemberAccessExpression(ITypeSymbol memberType,
+            ITypeSymbol containingType,
+            ITypeSymbol typeInDeclaration)
+        {
+            var typeNameOccursInContainerDeclaration = containingType.Name.Contains(memberType.Name);
+
+            return typeNameOccursInContainerDeclaration &&
+                   typeInDeclaration?.Equals(memberType) == true;
         }
 
         private static ExpressionSyntax GetRightmostInvocationExpression(ExpressionSyntax node)
