@@ -156,7 +156,7 @@
     <Compile Include="CodeActions\IntroduceVariable\IntroduceVariableTests.cs" />
     <Compile Include="CodeActions\InvertIf\InvertIfTests.cs" />
     <Compile Include="CodeActions\LambdaSimplifier\LambdaSimplifierTests.cs" />
-    <Compile Include="CodeActions\MoveTypeToFile\MoveTypeToFileTests.cs" />
+    <Compile Include="CodeActions\MoveType\MoveTypeTests.cs" />
     <Compile Include="CodeActions\ReplacePropertyWithMethods\ReplacePropertyWithMethodsTests.cs" />
     <Compile Include="Diagnostics\AddUsing\AddUsingTests_NuGet.cs" />
     <Compile Include="Diagnostics\GenerateMethod\GenerateConversionTests.cs" />

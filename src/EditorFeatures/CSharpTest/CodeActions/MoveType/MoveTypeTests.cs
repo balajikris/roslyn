@@ -2,7 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveTypeToFile;
+using Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType;
 using Microsoft.CodeAnalysis.CSharp.Test.Utilities;
 using Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
@@ -12,13 +12,13 @@ using Xunit;
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeActions.MoveTypeToFile
 {
     // TODO: should probably be in EditorServicesTEst2 so we can use xml literals
-    public class MoveTypeToFileTests : AbstractCSharpCodeActionTest
+    public class MoveTypeTests : AbstractCSharpCodeActionTest
     {
         private const string SpanMarker = "[||]";
 
         protected override object CreateCodeRefactoringProvider(Workspace workspace)
         {
-            return new MoveTypeToFileCodeRefactoringProvider();
+            return new MoveTypeCodeRefactoringProvider();
         }
 
         [WpfFact, Trait(Traits.Feature, Traits.Features.CodeActionsMoveType)]

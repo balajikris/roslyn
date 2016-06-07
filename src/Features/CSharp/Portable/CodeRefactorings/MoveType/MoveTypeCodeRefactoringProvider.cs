@@ -17,10 +17,10 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Formatting;
 using System.Composition;
 
-namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveTypeToFile
+namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
 {
-    [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "MoveTypeToFile"), Shared]
-    internal class MoveTypeToFileCodeRefactoringProvider : CodeRefactoringProvider
+    [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "MoveType"), Shared]
+    internal class MoveTypeCodeRefactoringProvider : CodeRefactoringProvider
     {
         public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {
@@ -52,7 +52,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveTypeToFile
             // TODO: see IntroduceVariable to see how to register more than 1 actions.
             // AbstractIntroduceVariableService.cs::IntroduceVariableAsync::65
             context.RegisterRefactoring(
-                new MoveTypeToFileCodeAction(
+                new MoveTypeCodeAction(
                     "Move type to File",
                     (c) => MoveTypeToNewFileAsync(document, typeDeclaration, cancellationToken)));
 
@@ -144,9 +144,9 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveTypeToFile
             //newDocumentEditor.Generator.NamespaceDeclaration(namespaceName, newTypeDeclaration);
         }
 
-        private class MoveTypeToFileCodeAction : CodeAction.SolutionChangeAction
+        private class MoveTypeCodeAction : CodeAction.SolutionChangeAction
         {
-            public MoveTypeToFileCodeAction(string title, Func<CancellationToken, Task<Solution>> createChangedSolution)
+            public MoveTypeCodeAction(string title, Func<CancellationToken, Task<Solution>> createChangedSolution)
                 : base(title, createChangedSolution, equivalenceKey: title)
             {
             }
