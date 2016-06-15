@@ -16,47 +16,48 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Formatting;
 using System.Composition;
+using Microsoft.CodeAnalysis.CodeRefactorings.MoveType;
 
 namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
 {
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "MoveType"), Shared]
-    internal class MoveTypeCodeRefactoringProvider : CodeRefactoringProvider
+    internal class MoveTypeCodeRefactoringProvider : AbstractMoveTypeCodeRefactoringProvider<BaseTypeDeclarationSyntax>
     {
-        public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
-        {
-            var document = context.Document;
-            var textSpan = context.Span;
-            var cancellationToken = context.CancellationToken;
+        //public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
+        //{
+        //    var document = context.Document;
+        //    var textSpan = context.Span;
+        //    var cancellationToken = context.CancellationToken;
 
-            // TODO: what checks do i need here?
-            if (!textSpan.IsEmpty)
-            {
-                return;
-            }
+        //    // TODO: what checks do i need here?
+        //    if (!textSpan.IsEmpty)
+        //    {
+        //        return;
+        //    }
 
-            if (document.Project.Solution.Workspace.Kind == WorkspaceKind.MiscellaneousFiles)
-            {
-                return;
-            }
+        //    if (document.Project.Solution.Workspace.Kind == WorkspaceKind.MiscellaneousFiles)
+        //    {
+        //        return;
+        //    }
 
-            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            var typeDeclaration = root.FindNode(textSpan) as BaseTypeDeclarationSyntax;
+        //    var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        //    var typeDeclaration = root.FindNode(textSpan) as BaseTypeDeclarationSyntax;
 
-            // TODO: change this, the user may want to create a partial type in another file.
-            if (typeDeclaration == null ||
-                string.Equals(document.Name, typeDeclaration.Identifier.ValueText, StringComparison.CurrentCultureIgnoreCase))
-            {
-                return;
-            }
+        //    // TODO: change this, the user may want to create a partial type in another file.
+        //    if (typeDeclaration == null ||
+        //        string.Equals(document.Name, typeDeclaration.Identifier.ValueText, StringComparison.CurrentCultureIgnoreCase))
+        //    {
+        //        return;
+        //    }
 
-            // TODO: see IntroduceVariable to see how to register more than 1 actions.
-            // AbstractIntroduceVariableService.cs::IntroduceVariableAsync::65
-            context.RegisterRefactoring(
-                new MoveTypeCodeAction(
-                    "Move type to File",
-                    (c) => MoveTypeToNewFileAsync(document, typeDeclaration, cancellationToken)));
+        //    // TODO: see IntroduceVariable to see how to register more than 1 actions.
+        //    // AbstractIntroduceVariableService.cs::IntroduceVariableAsync::65
+        //    context.RegisterRefactoring(
+        //        new MoveTypeCodeAction(
+        //            "Move type to File",
+        //            (c) => MoveTypeToNewFileAsync(document, typeDeclaration, cancellationToken)));
 
-        }
+        //}
 
         private async Task<Solution> MoveTypeToNewFileAsync(Document sourceDocument, BaseTypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
         {
@@ -74,10 +75,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
                 return originalSolution;
             }
 
-            // TODO: try DocumentEditor, SolutionEditor apis.
-            // var editor = SymbolEditor.Create(currentSolution);
-            // var l = typeSymbol.Locations.Single(loc => loc.SourceTree == typeDeclaration.SyntaxTree);
-
             // TODO: deal with partial types, nested types etc.
 
             var sourceSyntaxTree = await sourceDocument.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
@@ -87,7 +84,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
             var documentEditor = await DocumentEditor.CreateAsync(sourceDocument, cancellationToken).ConfigureAwait(false);
             documentEditor.RemoveNode(typeDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
 
-            // TODO: Instead have a syntax/symbol walker of sorts that collects required namespaces?
             var documentWithTypeRemoved = documentEditor.GetChangedDocument();
             documentWithTypeRemoved = await documentWithTypeRemoved
                 .GetLanguageService<IRemoveUnnecessaryImportsService>()
@@ -97,7 +93,12 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
             var project = documentWithTypeRemoved.Project;
             var namespaceName = typeSymbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : typeSymbol.ContainingNamespace.Name;
             var destinationDocumentName = typeDeclaration.Identifier.ValueText + ".cs";
-            var destinationDocumentId = DocumentId.CreateNewId(project.Id, debugName: destinationDocumentName);
+            var destinationDocumentId = DocumentId.CreateNewId(project.Id, destinationDocumentName);
+
+            if (project.Solution.ContainsDocument(destinationDocumentId))
+            {
+                // show a UI to get new file name.
+            }
 
             // add using directives
             var compilationUnitSyntax = CompilationUnit()
@@ -137,19 +138,19 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
                 .ConfigureAwait(false);
 
             return destinationDocument.Project.Solution;
-            // TODO: try DocumentEditor, SolutionEditor apis.
-            //var solutionEditor = new SolutionEditor(newSolution);
-            //var newDocumentEditor = await solutionEditor.GetDocumentEditorAsync(newDocumentId, cancellationToken).ConfigureAwait(false);
-            //var namespaceName = typeSymbol.ContainingNamespace.Name;
-            //newDocumentEditor.Generator.NamespaceDeclaration(namespaceName, newTypeDeclaration);
         }
 
-        private class MoveTypeCodeAction : CodeAction.SolutionChangeAction
-        {
-            public MoveTypeCodeAction(string title, Func<CancellationToken, Task<Solution>> createChangedSolution)
-                : base(title, createChangedSolution, equivalenceKey: title)
-            {
-            }
-        }
+        //private class MoveTypeCodeAction : CodeAction.SolutionChangeAction
+        //{
+        //    public MoveTypeCodeAction(string title, Func<CancellationToken, Task<Solution>> createChangedSolution)
+        //        : base(title, createChangedSolution, equivalenceKey: title)
+        //    {
+        //    }
+
+        //    //protected override Task<Solution> GetChangedSolutionAsync(CancellationToken cancellationToken)
+        //    //{
+        //    //    return base.GetChangedSolutionAsync(cancellationToken);
+        //    //}
+        //}
     }
 }
