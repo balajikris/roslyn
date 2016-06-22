@@ -61,10 +61,10 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             if (state.IsNestedType)
             {
                 // nested type, make outer type partial and move type into a new file inside a partial part.
-                actions.AddRange(
-                    GetCodeActions(
-                        document, state, mustShowDialog,
-                        renameFile: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: true));
+                actions.Add(GetSimpleCodeAction(
+                    document, state, renameFile: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: true));
+                actions.Add(GetCodeActionWithUI(
+                    document, state, renameFile: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: true));
             }
             else
             {
@@ -72,53 +72,35 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 {
                     //Todo: clean up this, showDialog means can't move or rename etc.. feels weird.
                     // rename file.
-                    actions.AddRange(
-                        GetCodeActions(
-                            document, state, mustShowDialog,
-                            renameFile: true, moveToNewFile: false, makeTypePartial: false, makeOuterTypePartial: false));
+                    actions.Add(GetSimpleCodeAction(
+                        document, state, renameFile: true, moveToNewFile: false, makeTypePartial: false, makeOuterTypePartial: false));
 
                     // make partial and create a partial decl in a new file
-                    actions.AddRange(
-                        GetCodeActions(
-                            document, state, mustShowDialog: true,
-                            renameFile: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
+                    actions.Add(GetSimpleCodeAction(
+                        document, state, renameFile: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
+
+                    actions.Add(GetCodeActionWithUI(
+                        document, state, renameFile: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
                 }
                 else
                 {
                     // straight forward case, not the only type in this file, move type to a new file.
-                    actions.Add(
-                        GetSimpleCodeAction(
-                            document, renameFile: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: false, state: state));
+                    actions.Add(GetSimpleCodeAction(
+                        document, renameFile: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: false, state: state));
+                    actions.Add(GetCodeActionWithUI(
+                        document, renameFile: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: false, state: state));
                 }
             }
 
             return actions;
         }
 
-        private static IEnumerable<CodeAction> GetCodeActions(
-            SemanticDocument document,
-            State state,
-            bool mustShowDialog,
-            bool renameFile,
-            bool moveToNewFile,
-            bool makeTypePartial,
-            bool makeOuterTypePartial)
+        private static CodeAction GetCodeActionWithUI(SemanticDocument document, State state, bool renameFile, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial)
         {
-            var codeActionWithOption = (CodeAction) new MoveTypeCodeActionWithOption(
-                document, renameFile, moveToNewFile, makeTypePartial, makeOuterTypePartial, state);
-
-            var actions = new List<CodeAction> { codeActionWithOption };
-
-            if (!mustShowDialog)
-            {
-                actions.Add(GetSimpleCodeAction(
-                    document, renameFile, moveToNewFile, makeTypePartial, makeOuterTypePartial, state));
-            }
-
-            return actions;
+            return new MoveTypeCodeActionWithOption(document, renameFile, moveToNewFile, makeTypePartial, makeOuterTypePartial, state);
         }
 
-        private static MoveTypeCodeAction GetSimpleCodeAction(SemanticDocument document, bool renameFile, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial, State state)
+        private static MoveTypeCodeAction GetSimpleCodeAction(SemanticDocument document, State state, bool renameFile, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial)
         {
             return new MoveTypeCodeAction(document, renameFile, moveToNewFile, makeTypePartial, makeOuterTypePartial, state);
         }

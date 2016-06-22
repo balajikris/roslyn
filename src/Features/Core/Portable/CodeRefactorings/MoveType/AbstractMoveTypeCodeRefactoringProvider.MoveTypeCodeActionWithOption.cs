@@ -22,6 +22,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly bool _moveToNewFile;
             private readonly bool _makeTypePartial;
             private readonly bool _makeOuterTypePartial;
+            private readonly string _title;
 
             public MoveTypeCodeActionWithOption(
                 SemanticDocument document,
@@ -37,14 +38,26 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
                 _state = state;
+                _title = CreateDisplayText();
+            }
+
+            private string CreateDisplayText()
+            {
+                if (_moveToNewFile || _makeOuterTypePartial)
+                {
+                    return $"Move {_state.TypeToMove.Name} via UI";
+                }
+                else if (_makeTypePartial)
+                {
+                    return $"Make partial definition for {_state.TypeToMove.Name} via UI";
+                }
+
+                return "unexpected path reached - UI";
             }
 
             public override string Title
             {
-                get
-                {
-                    return "Move Type Dialog...";
-                }
+                get { return _title; }
             }
 
             //public override string EquivalenceKey

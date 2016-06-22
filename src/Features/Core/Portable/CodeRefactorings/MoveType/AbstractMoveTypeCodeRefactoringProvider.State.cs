@@ -31,8 +31,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             public string TargetFileNameCandidate { get; set; }
             public string TargetFileExtension { get; set; }
 
-            public INamespaceSymbol TargetNamespace { get; set; }
-            public INamedTypeSymbol TargetContainingType { get; set; }
+            //public INamespaceSymbol TargetNamespace { get; set; }
+            //public INamedTypeSymbol TargetContainingType { get; set; }
             public INamedTypeSymbol TypeToMove { get; set; }
 
             private State(SemanticDocument document)
@@ -82,6 +82,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     return false;
                 }
 
+                TypeToMove = typeSymbol;
+
                 IsNestedType = typeDeclaration.Parent is TTypeDeclarationSyntax;
                 OnlyTypeInFile = this.Document.Root.DescendantNodes().OfType<TTypeDeclarationSyntax>().Count() == 1;
 
@@ -99,7 +101,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 {
                     TargetFileNameAlreadyExists = true;
                 }
-
 
                 return true;
             }

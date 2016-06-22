@@ -55,21 +55,58 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 
                 if (_renameFile)
                 {
-                    // TODO: see if this needs .WithId(newID) as well as ID depends on Name.
-                    var newDocumentInfo = documentInfo.WithName(name: _state.TargetFileNameCandidate);
+                    var text = await _document.Document.GetTextAsync(_cancellationToken).ConfigureAwait(false);
+                    var newDocumentId = DocumentId.CreateNewId(_document.Document.Project.Id, _state.TargetFileNameCandidate);
+
                     var newSolution = solution.RemoveDocument(documentInfo.Id);
-                    newSolution = newSolution.AddDocument(newDocumentInfo);
+                    newSolution = newSolution.AddDocument(newDocumentId, _state.TargetFileNameCandidate, text);
 
                     return new CodeActionOperation[] { new ApplyChangesOperation(newSolution),
-                                                       new OpenDocumentOperation(newDocumentInfo.Id) };
-
-
+                                                       new OpenDocumentOperation(newDocumentId) };
                 }
                 else if (_renameType)
                 {
                     // TODO: there is no codeaction exposed for this codepath.
                     var newSolution = await Renamer.RenameSymbolAsync(solution, _state.TypeToMove, _state.TargetFileNameCandidate, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
                     return new CodeActionOperation[] { new ApplyChangesOperation(newSolution) };
+                }
+
+                if (_moveToNewFile)
+                {
+                    var documentName = _fromDialog
+                        ? _moveTypeOptions.NewFileName
+                        : _state.TargetFileNameCandidate + _state.TargetFileExtension;
+
+                    var namedType = _state.TypeToMove;
+                    var projectToBeUpdated = _document.Project;
+                    var newDocumentId = DocumentId.CreateNewId(projectToBeUpdated.Id, documentName);
+                    var newSolution = projectToBeUpdated.Solution.AddDocument(newDocumentId, documentName, string.Empty/*, folders, fullFilePath*/);
+
+                    var newDocument = newSolution.GetDocument(newDocumentId);
+                    var newSemanticModel = await newDocument.GetSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
+                    var enclosingNamespace = newSemanticModel.GetEnclosingNamespace(0, _cancellationToken);
+
+                    //var rootNamespaceOrType = namedType.GenerateRootNamespaceOrType(containers);
+                    var rootNamespaceOrType = (INamespaceOrTypeSymbol)namedType;
+
+                    var codeGenResult = await CodeGenerator.AddNamespaceOrTypeDeclarationAsync(
+                        newSolution,
+                        enclosingNamespace,
+                        rootNamespaceOrType,
+                        new CodeGenerationOptions(newSemanticModel.SyntaxTree.GetLocation(new TextSpan())),
+                        _cancellationToken).ConfigureAwait(false);
+
+                    var root = await codeGenResult.GetSyntaxRootAsync(_cancellationToken).ConfigureAwait(false);
+
+                    var updatedSolution = newSolution.WithDocumentSyntaxRoot(newDocumentId, root, PreservationMode.PreserveIdentity);
+
+                    
+                    // add new document to solution
+                    // add usings to document
+                    // add namespace to document - containing NS of type being moved.
+                    // add containing type if necessary, with modifications such as partial.
+                    // add type symbol to containing type or namespace.
+
                 }
 
                 return new CodeActionOperation[] { };
