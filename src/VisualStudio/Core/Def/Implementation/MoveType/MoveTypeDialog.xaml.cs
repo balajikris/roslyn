@@ -27,12 +27,23 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.MoveType
         public string MoveTypeDialogTitle { get { return "Move Type to File..."; } }
         public string Folder { get; }
         public string AddFile { get { return "Add File"; } }
+        public string RemoveUnusedUsings { get { return "Remove unused usings in source file"; } }
 
         public MoveTypeDialog(MoveTypeDialogViewModel viewModel)
         {
             _viewModel = viewModel;
             InitializeComponent();
             DataContext = viewModel;
+
+            this.PreviewKeyDown += new KeyEventHandler(CloseOnEscape);
+        }
+
+        private void CloseOnEscape(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                Close();
+            }
         }
 
         private void AddFileButton_Click(object sender, RoutedEventArgs e)

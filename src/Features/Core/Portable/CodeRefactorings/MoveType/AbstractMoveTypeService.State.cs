@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeCodeRefactoringProvider<TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
     {
         protected class State
         {
@@ -33,7 +33,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 
             //public INamespaceSymbol TargetNamespace { get; set; }
             //public INamedTypeSymbol TargetContainingType { get; set; }
-            public INamedTypeSymbol TypeToMove { get; set; }
+            public INamedTypeSymbol TypeSymbol { get; set; }
+            public TTypeDeclarationSyntax TypeNode { get; set;}
 
             private State(SemanticDocument document)
             {
@@ -82,7 +83,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     return false;
                 }
 
-                TypeToMove = typeSymbol;
+                TypeNode = typeDeclaration;
+                TypeSymbol = typeSymbol;
 
                 IsNestedType = typeDeclaration.Parent is TTypeDeclarationSyntax;
                 OnlyTypeInFile = this.Document.Root.DescendantNodes().OfType<TTypeDeclarationSyntax>().Count() == 1;

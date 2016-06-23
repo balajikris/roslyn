@@ -32,6 +32,13 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.MoveType
             set { SetProperty(ref _projectName, value); }
         }
 
+        private bool _removeUnusedUsings;
+        public bool RemoveUnusedUsings
+        {
+            get { return _removeUnusedUsings; }
+            set { SetProperty(ref _removeUnusedUsings, value); }
+        }
+
         internal MoveTypeDialogViewModel(
             string suggestedFileName,
             Document document,
@@ -39,7 +46,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.MoveType
             IProjectManagementService projectManagementService,
             ISyntaxFactsService syntaxFactsService)
         {
-            ProjectName = document.Project.Name + Path.DirectorySeparatorChar;
+            ProjectName = document.Project.Name + " " + Path.DirectorySeparatorChar;
             FileName = suggestedFileName;
         }
 

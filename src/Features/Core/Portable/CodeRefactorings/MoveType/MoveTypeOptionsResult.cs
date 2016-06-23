@@ -16,8 +16,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 
         public MoveTypeOptionsResult(string newFileName, bool isCancelled = false)
         {
-            this.NewFileName = NewFileName;
-            this.IsCancelled = IsCancelled;
+            this.NewFileName = newFileName;
+            this.IsCancelled = isCancelled;
         }
 
         private MoveTypeOptionsResult(bool isCancelled)

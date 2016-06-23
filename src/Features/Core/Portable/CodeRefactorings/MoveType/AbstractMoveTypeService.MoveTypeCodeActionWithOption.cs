@@ -12,12 +12,13 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeCodeRefactoringProvider<TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
     {
         private class MoveTypeCodeActionWithOption : CodeActionWithOptions
         {
             private readonly SemanticDocument _document;
             private readonly State _state;
+            private readonly TService _service;
             private readonly bool _renameFile;
             private readonly bool _moveToNewFile;
             private readonly bool _makeTypePartial;
@@ -25,6 +26,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly string _title;
 
             public MoveTypeCodeActionWithOption(
+                TService service,
                 SemanticDocument document,
                 bool renameFile,
                 bool moveToNewFile,
@@ -38,6 +40,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
                 _state = state;
+                _service = service;
                 _title = CreateDisplayText();
             }
 
@@ -45,11 +48,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 if (_moveToNewFile || _makeOuterTypePartial)
                 {
-                    return $"Move {_state.TypeToMove.Name} via UI";
+                    return $"Move {_state.TypeSymbol.Name} via UI";
                 }
                 else if (_makeTypePartial)
                 {
-                    return $"Make partial definition for {_state.TypeToMove.Name} via UI";
+                    return $"Make partial definition for {_state.TypeSymbol.Name} via UI";
                 }
 
                 return "unexpected path reached - UI";
@@ -86,7 +89,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 var moveTypeOptions = options as MoveTypeOptionsResult;
                 if (moveTypeOptions != null && !moveTypeOptions.IsCancelled)
                 {
-                    var editor = new Editor(_document, _renameFile, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions, fromDialog: true, cancellationToken: cancellationToken);
+                    var editor = new Editor(_service, _document, _renameFile, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions, fromDialog: true, cancellationToken: cancellationToken);
                     operations = await editor.GetOperationsAsync().ConfigureAwait(false);
                 }
 

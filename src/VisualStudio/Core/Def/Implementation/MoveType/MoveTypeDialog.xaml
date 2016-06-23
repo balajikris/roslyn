@@ -19,7 +19,14 @@
             WindowStartupLocation="CenterScreen" 
             SizeToContent="Width">
     <Grid>
+        <Grid.Resources>
+            <ResourceDictionary>
+                <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            </ResourceDictionary>
+        </Grid.Resources>
+        
         <Grid.RowDefinitions>
+            <RowDefinition />
             <RowDefinition />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
@@ -65,5 +72,18 @@
             IsDefault="True" 
             Name="AddFileButton" 
             Click="AddFileButton_Click" />
+
+        <CheckBox 
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Name="RemoveUnusedUsingsCheckBox"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Margin="5,0"
+            Height="26"
+            Content="{Binding ElementName=dialog, Path=RemoveUnusedUsings}"
+            IsChecked="{Binding RemoveUnusedUsings, Mode=TwoWay}"/>
+
     </Grid>
 </vs:DialogWindow>

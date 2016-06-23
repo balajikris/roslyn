@@ -21,7 +21,7 @@ using Microsoft.CodeAnalysis.CodeRefactorings.MoveType;
 namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
 {
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "MoveType"), Shared]
-    internal class MoveTypeCodeRefactoringProvider : AbstractMoveTypeCodeRefactoringProvider<BaseTypeDeclarationSyntax>
+    internal class MoveTypeCodeRefactoringProvider : AbstractMoveTypeCodeRefactoringProvider
     {
         //public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         //{

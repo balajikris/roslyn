@@ -8,12 +8,14 @@ using Microsoft.CodeAnalysis.CodeActions;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeCodeRefactoringProvider<TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
     {
         private class MoveTypeCodeAction : CodeAction
         {
             private readonly SemanticDocument _document;
             private readonly State _state;
+            private readonly TService _service;
+
             private readonly bool _renameFile;
             private readonly bool _moveToNewFile;
             private readonly bool _makeTypePartial;
@@ -21,6 +23,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly string _title;
 
             public MoveTypeCodeAction(
+                TService service,
                 SemanticDocument document,
                 bool renameFile,
                 bool moveToNewFile,
@@ -34,6 +37,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
                 _state = state;
+                _service = service;
                 _title = CreateDisplayText();
             }
 
@@ -45,11 +49,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 }
                 else if (_moveToNewFile || _makeOuterTypePartial)
                 {
-                    return $"Move {_state.TypeToMove.Name} to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
+                    return $"Move {_state.TypeSymbol.Name} to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
                 }
                 else if (_makeTypePartial)
                 {
-                    return $"Make partial definition for {_state.TypeToMove.Name}";
+                    return $"Make partial definition for {_state.TypeSymbol.Name}";
                 }
 
                 return "unexpected path reached";
@@ -72,7 +76,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 // var moveTypeOptions = new MoveTypeOptionsResult(_state.TargetFileNameCandidate);
                 // TODO: Make another constructor overload that doesn't require MoveTypeOptions.
-                var editor = new Editor(_document, _renameFile, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions: null, fromDialog: false, cancellationToken: cancellationToken);
+                var editor = new Editor(_service, _document, _renameFile, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions: null, fromDialog: false, cancellationToken: cancellationToken);
                 return await editor.GetOperationsAsync().ConfigureAwait(false);
             }
         }

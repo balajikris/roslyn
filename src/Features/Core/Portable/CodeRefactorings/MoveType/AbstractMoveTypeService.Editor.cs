@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeGeneration;
+using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.ProjectManagement;
+using Microsoft.CodeAnalysis.RemoveUnnecessaryImports;
 using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
@@ -18,7 +20,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeCodeRefactoringProvider<TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
     {
         private class Editor
         {
@@ -26,6 +28,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly MoveTypeOptionsResult _moveTypeOptions;
             private readonly SemanticDocument _document;
             private readonly State _state;
+            private readonly TService _service;
 
             private readonly bool _fromDialog;
             private readonly bool _makeOuterTypePartial;
@@ -34,7 +37,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly bool _renameFile;
             private readonly bool _renameType;
 
-            public Editor(SemanticDocument document, bool renameFile, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial, State state, MoveTypeOptionsResult moveTypeOptions, bool fromDialog, CancellationToken cancellationToken)
+            public Editor(TService service, SemanticDocument document, bool renameFile, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial, State state, MoveTypeOptionsResult moveTypeOptions, bool fromDialog, CancellationToken cancellationToken)
             {
                 _document = document;
                 _renameFile = renameFile;
@@ -43,6 +46,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 _makeOuterTypePartial = makeOuterTypePartial;
                 _renameType = false;
                 _state = state;
+                _service = service;
                 this._moveTypeOptions = moveTypeOptions;
                 this._fromDialog = fromDialog;
                 this._cancellationToken = cancellationToken;
@@ -67,7 +71,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 else if (_renameType)
                 {
                     // TODO: there is no codeaction exposed for this codepath.
-                    var newSolution = await Renamer.RenameSymbolAsync(solution, _state.TypeToMove, _state.TargetFileNameCandidate, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
+                    var newSolution = await Renamer.RenameSymbolAsync(solution, _state.TypeSymbol, _state.TargetFileNameCandidate, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
                     return new CodeActionOperation[] { new ApplyChangesOperation(newSolution) };
                 }
 
@@ -77,8 +81,22 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                         ? _moveTypeOptions.NewFileName
                         : _state.TargetFileNameCandidate + _state.TargetFileExtension;
 
-                    var namedType = _state.TypeToMove;
+                    var namedType = _state.TypeSymbol;
                     var projectToBeUpdated = _document.Project;
+
+                    var documentEditor = await DocumentEditor.CreateAsync(_document.Document, _cancellationToken).ConfigureAwait(false);
+                    documentEditor.RemoveNode(_state.TypeNode, SyntaxRemoveOptions.KeepNoTrivia);
+
+                    var documentWithTypeRemoved = documentEditor.GetChangedDocument();
+                    documentWithTypeRemoved = await documentWithTypeRemoved
+                        .GetLanguageService<IRemoveUnnecessaryImportsService>()
+                        .RemoveUnnecessaryImportsAsync(documentWithTypeRemoved, _cancellationToken)
+                        .ConfigureAwait(false);
+
+                    projectToBeUpdated = documentWithTypeRemoved.Project;
+
+                    // if documentWithTypeRemoved is empty (without any types left, should we remove the document from solution?
+
                     var newDocumentId = DocumentId.CreateNewId(projectToBeUpdated.Id, documentName);
                     var newSolution = projectToBeUpdated.Solution.AddDocument(newDocumentId, documentName, string.Empty/*, folders, fullFilePath*/);
 
@@ -86,8 +104,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     var newSemanticModel = await newDocument.GetSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
                     var enclosingNamespace = newSemanticModel.GetEnclosingNamespace(0, _cancellationToken);
 
-                    //var rootNamespaceOrType = namedType.GenerateRootNamespaceOrType(containers);
-                    var rootNamespaceOrType = (INamespaceOrTypeSymbol)namedType;
+                    var rootNamespaceOrType = namedType.GenerateRootNamespaceOrType(new string[] { namedType.ContainingNamespace.Name });
 
                     var codeGenResult = await CodeGenerator.AddNamespaceOrTypeDeclarationAsync(
                         newSolution,
@@ -99,8 +116,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     var root = await codeGenResult.GetSyntaxRootAsync(_cancellationToken).ConfigureAwait(false);
 
                     var updatedSolution = newSolution.WithDocumentSyntaxRoot(newDocumentId, root, PreservationMode.PreserveIdentity);
+                    updatedSolution = await _service.AddUsingsToDocumentAsync(updatedSolution, root, newDocumentId, _document.Document, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
 
-                    
+                    return new CodeActionOperation[] { new ApplyChangesOperation(updatedSolution), new OpenDocumentOperation(newDocumentId) };
+
+
                     // add new document to solution
                     // add usings to document
                     // add namespace to document - containing NS of type being moved.
