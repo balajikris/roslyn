@@ -51,11 +51,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 if (_moveToNewFile || _makeOuterTypePartial)
                 {
-                    return $"Move Type '{_state.TypeSymbol.Name}' to new file";
+                    return $"Move '{_state.TypeSymbol.Name}' to new file";
                 }
                 else if (_makeTypePartial)
                 {
-                    return $"Make partial definition for Type '{_state.TypeSymbol.Name}' in new file";
+                    return $"Make partial definition for '{_state.TypeSymbol.Name}' in new file";
                 }
 
                 return "unexpected path reached - UI";

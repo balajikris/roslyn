@@ -48,19 +48,19 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 if (_renameFile)
                 {
-                    return $"Rename File to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
+                    return $"Rename File to '{_state.TargetFileNameCandidate + _state.TargetFileExtension}'";
                 }
                 else if (_renameType)
                 {
-                    return $"Rename Type '{_state.TypeSymbol.Name}' to match file name";
+                    return $"Rename Type to '{_state.DocumentName}'";
                 }
                 else if (_moveToNewFile || _makeOuterTypePartial)
                 {
-                    return $"Move Type to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
+                    return $"Move Type to '{_state.TargetFileNameCandidate + _state.TargetFileExtension}'";
                 }
                 else if (_makeTypePartial)
                 {
-                    return $"Make partial definition for {_state.TypeSymbol.Name}";
+                    return $"Make partial definition for '{_state.TypeSymbol.Name}'";
                 }
 
                 return "unexpected path reached";

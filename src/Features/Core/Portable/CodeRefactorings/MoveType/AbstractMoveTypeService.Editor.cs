@@ -138,7 +138,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 
                 AddPartialModifiersToTypeChain(documentEditor, typeNode);
 
-                var membersToRemove = GetMembersToRemove(root, typeNode, keepDescendents: !_makeTypePartial);
+                var membersToRemove = GetMembersToRemove(root, typeNode, removeDescendents: _makeTypePartial);
                 foreach (var member in membersToRemove)
                 {
                     documentEditor.RemoveNode(member, SyntaxRemoveOptions.KeepNoTrivia);
@@ -157,25 +157,27 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 return await CleanUpDocumentAsync(newDocument, cancellationToken).ConfigureAwait(false);
             }
 
-            private static IEnumerable<TMemberDeclarationSyntax> GetMembersToRemove(
-                SyntaxNode root, TTypeDeclarationSyntax typeNode, bool keepDescendents)
+            private static IEnumerable<SyntaxNode> GetMembersToRemove(
+                SyntaxNode root, TTypeDeclarationSyntax typeNode, bool removeDescendents)
             {
                 var ancestorsAndSelfToKeep = typeNode
                     .AncestorsAndSelf()
                     .Where(n => n is TNamespaceDeclarationSyntax || n is TTypeDeclarationSyntax);
 
-                var descendentsToKeep = typeNode
-                    .DescendantNodes(descendIntoChildren: _ => true, descendIntoTrivia: false)
-                    .OfType<TMemberDeclarationSyntax>();
-
-                var typeNodeAndFamilyToKeep = keepDescendents
-                    ? ancestorsAndSelfToKeep.Concat(descendentsToKeep)
-                    : ancestorsAndSelfToKeep;
-
                 var membersToRemove = root
                     .DescendantNodesAndSelf(descendIntoChildren: _ => true, descendIntoTrivia: false)
-                    .OfType<TMemberDeclarationSyntax>()
-                    .Where(n => !typeNodeAndFamilyToKeep.Contains(n));
+                    .Where(n => (n is TNamespaceDeclarationSyntax || n is TTypeDeclarationSyntax)
+                                ? !ancestorsAndSelfToKeep.Contains(n)
+                                : false);
+
+                if (removeDescendents)
+                {
+                    var descendents = typeNode
+                        .DescendantNodes(descendIntoChildren: _ => true, descendIntoTrivia: false)
+                        .OfType<TMemberDeclarationSyntax>();
+
+                    membersToRemove = membersToRemove.Concat(descendents);
+                }
 
                 return membersToRemove;
             }
