@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
     {
         private class MoveTypeCodeAction : CodeAction
         {
@@ -21,11 +21,13 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly bool _makeTypePartial;
             private readonly bool _makeOuterTypePartial;
             private readonly string _title;
+            private readonly bool _renameType;
 
             public MoveTypeCodeAction(
                 TService service,
                 SemanticDocument document,
                 bool renameFile,
+                bool renameType,
                 bool moveToNewFile,
                 bool makeTypePartial,
                 bool makeOuterTypePartial,
@@ -33,6 +35,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 _document = document;
                 _renameFile = renameFile;
+                _renameType = renameType;
                 _moveToNewFile = moveToNewFile;
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
@@ -45,11 +48,15 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 if (_renameFile)
                 {
-                    return $"Rename {_document.Document.Name} to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
+                    return $"Rename File to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
+                }
+                else if (_renameType)
+                {
+                    return $"Rename Type '{_state.TypeSymbol.Name}' to match file name";
                 }
                 else if (_moveToNewFile || _makeOuterTypePartial)
                 {
-                    return $"Move {_state.TypeSymbol.Name} to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
+                    return $"Move Type to {_state.TargetFileNameCandidate + _state.TargetFileExtension}";
                 }
                 else if (_makeTypePartial)
                 {
@@ -76,7 +83,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 // var moveTypeOptions = new MoveTypeOptionsResult(_state.TargetFileNameCandidate);
                 // TODO: Make another constructor overload that doesn't require MoveTypeOptions.
-                var editor = new Editor(_service, _document, _renameFile, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions: null, fromDialog: false, cancellationToken: cancellationToken);
+                var editor = new Editor(_service, _document, _renameFile, _renameType, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions: null, fromDialog: false, cancellationToken: cancellationToken);
                 return await editor.GetOperationsAsync().ConfigureAwait(false);
             }
         }

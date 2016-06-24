@@ -7,11 +7,12 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
     {
         protected class State
         {
             public SemanticDocument Document { get; }
+            public string DocumentName { get; set; }
 
             // list of properties that capture state
             public bool IsNestedType { get; private set; }
@@ -89,8 +90,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 IsNestedType = typeDeclaration.Parent is TTypeDeclarationSyntax;
                 OnlyTypeInFile = this.Document.Root.DescendantNodes().OfType<TTypeDeclarationSyntax>().Count() == 1;
 
-                string fileName = Path.GetFileNameWithoutExtension(this.Document.Document.Name);
-                TypeNameMatchesFileName = string.Equals(fileName, typeSymbol.Name, StringComparison.CurrentCultureIgnoreCase);
+                DocumentName = Path.GetFileNameWithoutExtension(this.Document.Document.Name);
+                TypeNameMatchesFileName = string.Equals(DocumentName, typeSymbol.Name, StringComparison.CurrentCultureIgnoreCase);
                 TargetFileNameCandidate = typeSymbol.Name;
                 TargetFileExtension = this.Document.Document.Project.Language == LanguageNames.CSharp ? ".cs" : ".vb";
 

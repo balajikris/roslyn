@@ -12,7 +12,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
     {
         private class MoveTypeCodeActionWithOption : CodeActionWithOptions
         {
@@ -20,6 +20,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly State _state;
             private readonly TService _service;
             private readonly bool _renameFile;
+            private readonly bool _renameType;
             private readonly bool _moveToNewFile;
             private readonly bool _makeTypePartial;
             private readonly bool _makeOuterTypePartial;
@@ -29,6 +30,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 TService service,
                 SemanticDocument document,
                 bool renameFile,
+                bool renameType,
                 bool moveToNewFile,
                 bool makeTypePartial,
                 bool makeOuterTypePartial,
@@ -36,6 +38,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 _document = document;
                 _renameFile = renameFile;
+                _renameType = renameType;
                 _moveToNewFile = moveToNewFile;
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
@@ -48,11 +51,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 if (_moveToNewFile || _makeOuterTypePartial)
                 {
-                    return $"Move {_state.TypeSymbol.Name} via UI";
+                    return $"Move Type '{_state.TypeSymbol.Name}' to new file";
                 }
                 else if (_makeTypePartial)
                 {
-                    return $"Make partial definition for {_state.TypeSymbol.Name} via UI";
+                    return $"Make partial definition for Type '{_state.TypeSymbol.Name}' in new file";
                 }
 
                 return "unexpected path reached - UI";
@@ -89,7 +92,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 var moveTypeOptions = options as MoveTypeOptionsResult;
                 if (moveTypeOptions != null && !moveTypeOptions.IsCancelled)
                 {
-                    var editor = new Editor(_service, _document, _renameFile, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions, fromDialog: true, cancellationToken: cancellationToken);
+                    var editor = new Editor(_service, _document, _renameFile, _renameType, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions, fromDialog: true, cancellationToken: cancellationToken);
                     operations = await editor.GetOperationsAsync().ConfigureAwait(false);
                 }
 

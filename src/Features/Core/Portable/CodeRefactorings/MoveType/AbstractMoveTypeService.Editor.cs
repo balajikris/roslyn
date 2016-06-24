@@ -20,7 +20,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
     {
         private class Editor
         {
@@ -37,14 +37,25 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly bool _renameFile;
             private readonly bool _renameType;
 
-            public Editor(TService service, SemanticDocument document, bool renameFile, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial, State state, MoveTypeOptionsResult moveTypeOptions, bool fromDialog, CancellationToken cancellationToken)
+            public Editor(
+                TService service,
+                SemanticDocument document,
+                bool renameFile,
+                bool renameType,
+                bool moveToNewFile,
+                bool makeTypePartial,
+                bool makeOuterTypePartial,
+                State state,
+                MoveTypeOptionsResult moveTypeOptions,
+                bool fromDialog,
+                CancellationToken cancellationToken)
             {
                 _document = document;
                 _renameFile = renameFile;
                 _moveToNewFile = moveToNewFile;
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
-                _renameType = false;
+                _renameType = renameType;
                 _state = state;
                 _service = service;
                 this._moveTypeOptions = moveTypeOptions;
@@ -71,7 +82,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 else if (_renameType)
                 {
                     // TODO: there is no codeaction exposed for this codepath.
-                    var newSolution = await Renamer.RenameSymbolAsync(solution, _state.TypeSymbol, _state.TargetFileNameCandidate, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
+                    var newSolution = await Renamer.RenameSymbolAsync(solution, _state.TypeSymbol, _state.DocumentName, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
                     return new CodeActionOperation[] { new ApplyChangesOperation(newSolution) };
                 }
 
@@ -81,55 +92,102 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                         ? _moveTypeOptions.NewFileName
                         : _state.TargetFileNameCandidate + _state.TargetFileExtension;
 
-                    var namedType = _state.TypeSymbol;
-                    var projectToBeUpdated = _document.Project;
-
-                    var documentEditor = await DocumentEditor.CreateAsync(_document.Document, _cancellationToken).ConfigureAwait(false);
-                    documentEditor.RemoveNode(_state.TypeNode, SyntaxRemoveOptions.KeepNoTrivia);
-
-                    var documentWithTypeRemoved = documentEditor.GetChangedDocument();
-                    documentWithTypeRemoved = await documentWithTypeRemoved
-                        .GetLanguageService<IRemoveUnnecessaryImportsService>()
-                        .RemoveUnnecessaryImportsAsync(documentWithTypeRemoved, _cancellationToken)
-                        .ConfigureAwait(false);
-
-                    projectToBeUpdated = documentWithTypeRemoved.Project;
-
-                    // if documentWithTypeRemoved is empty (without any types left, should we remove the document from solution?
-
+                    // fork source document, keep required type/namespace hierarchy and add it to a new document
+                    var projectToBeUpdated = _document.Document.Project;
                     var newDocumentId = DocumentId.CreateNewId(projectToBeUpdated.Id, documentName);
-                    var newSolution = projectToBeUpdated.Solution.AddDocument(newDocumentId, documentName, string.Empty/*, folders, fullFilePath*/);
 
-                    var newDocument = newSolution.GetDocument(newDocumentId);
-                    var newSemanticModel = await newDocument.GetSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
-                    var enclosingNamespace = newSemanticModel.GetEnclosingNamespace(0, _cancellationToken);
+                    var solutionWithNewDocument = await AddNewDocumentWithTypeDeclarationAsync(
+                        _document, documentName, newDocumentId, _state.TypeNode, _cancellationToken).ConfigureAwait(false);
 
-                    var rootNamespaceOrType = namedType.GenerateRootNamespaceOrType(new string[] { namedType.ContainingNamespace.Name });
+                    // Get the original source document again, from the latest forked solution.
+                    var sourceDocument = solutionWithNewDocument.GetDocument(_document.Document.Id);
 
-                    var codeGenResult = await CodeGenerator.AddNamespaceOrTypeDeclarationAsync(
-                        newSolution,
-                        enclosingNamespace,
-                        rootNamespaceOrType,
-                        new CodeGenerationOptions(newSemanticModel.SyntaxTree.GetLocation(new TextSpan())),
-                        _cancellationToken).ConfigureAwait(false);
+                    // remove type declaration from original source document and perform clean up operations like remove unused usings.
+                    var solutionWithBothDocumentsUpdated = await RemoveTypeDeclarationFromSourceDocumentAsync(
+                        sourceDocument, _state.TypeNode, _cancellationToken).ConfigureAwait(false);
 
-                    var root = await codeGenResult.GetSyntaxRootAsync(_cancellationToken).ConfigureAwait(false);
-
-                    var updatedSolution = newSolution.WithDocumentSyntaxRoot(newDocumentId, root, PreservationMode.PreserveIdentity);
-                    updatedSolution = await _service.AddUsingsToDocumentAsync(updatedSolution, root, newDocumentId, _document.Document, _document.Document.Options, _cancellationToken).ConfigureAwait(false);
-
-                    return new CodeActionOperation[] { new ApplyChangesOperation(updatedSolution), new OpenDocumentOperation(newDocumentId) };
-
-
-                    // add new document to solution
-                    // add usings to document
-                    // add namespace to document - containing NS of type being moved.
-                    // add containing type if necessary, with modifications such as partial.
-                    // add type symbol to containing type or namespace.
-
+                    return new CodeActionOperation[] { new ApplyChangesOperation(solutionWithBothDocumentsUpdated), new OpenDocumentOperation(newDocumentId) };
                 }
 
                 return new CodeActionOperation[] { };
+            }
+
+            private async Task<Solution> AddNewDocumentWithTypeDeclarationAsync(
+                SemanticDocument sourceDocument,
+                string newDocumentName,
+                DocumentId newDocumentId,
+                TTypeDeclarationSyntax typeNode,
+                CancellationToken cancellationToken)
+            {
+                var root = sourceDocument.Root;
+                var projectToBeUpdated = sourceDocument.Document.Project;
+
+                // remove all types and namespaces not in the ancestor chain of the one we've moving.
+                var ancestorNamespaces = typeNode.Ancestors().OfType<TNamespaceDeclarationSyntax>();
+                var ancestorTypesAndSelf = typeNode.AncestorsAndSelf().OfType<TTypeDeclarationSyntax>();
+                var descendentMembers = typeNode
+                    .DescendantNodes(descendIntoChildren: _ => true, descendIntoTrivia: false)
+                    .OfType<TMemberDeclarationSyntax>();
+
+                var membersToRemove = root
+                    .DescendantNodesAndSelf(descendIntoChildren: _ => true, descendIntoTrivia: false)
+                    .OfType<TMemberDeclarationSyntax>()
+                    .Where(n => UnaffiliatedMembers(n, ancestorNamespaces, ancestorTypesAndSelf, descendentMembers));
+
+                root = root.RemoveNodes(membersToRemove, SyntaxRemoveOptions.KeepNoTrivia);
+
+                // TODO: adjust partial modifier
+
+                // add an empty document to solution
+                var solutionWithNewDocument = projectToBeUpdated.Solution.AddDocument(newDocumentId, newDocumentName, string.Empty/*, folders, fullFilePath*/);
+
+                // update the text for the new document
+                solutionWithNewDocument = solutionWithNewDocument.WithDocumentSyntaxRoot(newDocumentId, root, PreservationMode.PreserveIdentity);
+
+                // get the updated document, perform clean up like remove unused usings.
+                var newDocument = solutionWithNewDocument.GetDocument(newDocumentId);
+                return await CleanUpDocumentAsync(newDocument, cancellationToken).ConfigureAwait(false);
+            }
+
+            private bool UnaffiliatedMembers(
+                SyntaxNode node,
+                IEnumerable<TNamespaceDeclarationSyntax> ancestorNamespaces,
+                IEnumerable<TTypeDeclarationSyntax> ancestorTypesAndSelf,
+                IEnumerable<TMemberDeclarationSyntax> descendentMembers)
+            {
+                // 1. Keep namespaces that are in ancestor chain of type being moved.
+                // 2. Keep type being moved and any type declaration in its ancestor chain.
+                //    2a.  For types in ancestor chain being kept, keep no members, except just the type being moved.
+                //    2b.  For type being moved, keep all descendent members as such.
+                return node is TNamespaceDeclarationSyntax
+                    ? !ancestorNamespaces.Contains(node)
+                    : node is TTypeDeclarationSyntax
+                        ? !ancestorTypesAndSelf.Contains(node)
+                        : !descendentMembers.Contains(node);
+            }
+
+            private async Task<Solution> RemoveTypeDeclarationFromSourceDocumentAsync(
+                Document sourceDocument, TTypeDeclarationSyntax typeNode, CancellationToken cancellationToken)
+            {
+                var documentEditor = await DocumentEditor.CreateAsync(sourceDocument, cancellationToken).ConfigureAwait(false);
+                documentEditor.RemoveNode(typeNode, SyntaxRemoveOptions.KeepNoTrivia);
+                var updatedDocument = documentEditor.GetChangedDocument();
+
+                // TODO: make this optional -- do not remove other parts of code from source document? 
+                return await CleanUpDocumentAsync(updatedDocument, cancellationToken).ConfigureAwait(false);
+            }
+
+            private async Task<Solution> CleanUpDocumentAsync(Document document, CancellationToken cancellationToken)
+            {
+                document = await document
+                    .GetLanguageService<IRemoveUnnecessaryImportsService>()
+                    .RemoveUnnecessaryImportsAsync(document, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+                return document.Project.Solution.WithDocumentSyntaxRoot(document.Id, root, PreservationMode.PreserveIdentity);
+
+                //TODO: if documentWithTypeRemoved is empty (without any types left, should we remove the document from solution?
             }
         }
     }
