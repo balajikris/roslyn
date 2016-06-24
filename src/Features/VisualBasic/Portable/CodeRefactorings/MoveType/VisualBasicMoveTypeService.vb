@@ -5,10 +5,15 @@ Imports Microsoft.CodeAnalysis.CodeRefactorings
 Imports Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 Imports Microsoft.CodeAnalysis.Host.Mef
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
+Imports System.Linq
 
 Namespace Microsoft.CodeAnalysis.VisualBasic.CodeRefactorings.MoveType
     <ExportLanguageService(GetType(IMoveTypeService), LanguageNames.VisualBasic), [Shared]>
     Friend Class VisualBasicMoveTypeService
         Inherits AbstractMoveTypeService(Of VisualBasicMoveTypeService, TypeBlockSyntax, NamespaceBlockSyntax, DeclarationStatementSyntax)
+
+        Protected Overrides Function IsPartial(typeDeclaration As TypeBlockSyntax) As Boolean
+            Return typeDeclaration.BlockStatement.Modifiers.Any(SyntaxKind.PartialKeyword)
+        End Function
     End Class
 End Namespace

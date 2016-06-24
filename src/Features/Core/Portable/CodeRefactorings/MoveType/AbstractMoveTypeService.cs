@@ -17,6 +17,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
         where TNamespaceDeclarationSyntax : SyntaxNode
         where TMemberDeclarationSyntax : SyntaxNode
     {
+        protected abstract bool IsPartial(TTypeDeclarationSyntax typeDeclaration);
+
         public async Task<CodeRefactoring> GetRefactoringAsync(Document document, TextSpan textSpan, CancellationToken cancellationToken)
         {
             var semanticDocument = await SemanticDocument.CreateAsync(document, cancellationToken).ConfigureAwait(false);
@@ -39,6 +41,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
         {
             var actions = new List<CodeAction>();
             var uiRequired = state.TargetFileNameAlreadyExists;
+            var isAlreadyPartialType = IsPartial(state.TypeNode);
 
             if (state.IsNestedType)
             {
@@ -72,9 +75,12 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                         //    document, state, renameFile: false, renameType:false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
                     }
 
-                    // create a partial part in a file name that user inputs.
-                    actions.Add(GetCodeActionWithUI(
-                        document, state, renameFile: false, renameType:false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
+                    if (!isAlreadyPartialType)
+                    {
+                        // create a partial part in a file name that user inputs.
+                        actions.Add(GetCodeActionWithUI(
+                            document, state, renameFile: false, renameType: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
+                    }
                 }
                 else
                 {
@@ -90,9 +96,12 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     actions.Add(GetCodeActionWithUI(
                         document, renameFile: false, renameType: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: false, state: state));
 
-                    // create a partial part in a file name that user inputs.
-                    actions.Add(GetCodeActionWithUI(
-                        document, renameFile: false, renameType: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false, state: state));
+                    if (!isAlreadyPartialType)
+                    {
+                        // create a partial part in a file name that user inputs.
+                        actions.Add(GetCodeActionWithUI(
+                            document, renameFile: false, renameType: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false, state: state));
+                    }
                 }
             }
 
