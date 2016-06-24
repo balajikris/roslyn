@@ -70,14 +70,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 get { return _title; }
             }
 
-            //public override string EquivalenceKey
-            //{
-            //    get
-            //    {
-            //        return _state.TargetFileNameCandidate;
-            //    }
-            //}
-
             protected override async Task<IEnumerable<CodeActionOperation>> ComputeOperationsAsync(CancellationToken cancellationToken)
             {
                 // var moveTypeOptions = new MoveTypeOptionsResult(_state.TargetFileNameCandidate);

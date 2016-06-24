@@ -64,14 +64,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 get { return _title; }
             }
 
-            //public override string EquivalenceKey
-            //{
-            //    get
-            //    {
-            //        return _state.TargetFileNameCandidate;
-            //    }
-            //}
-
             public override object GetOptions(CancellationToken cancellationToken)
             {
                 var moveTypeOptionsService = _document.Project.Solution.Workspace.Services.GetService<IMoveTypeOptionsService>();
