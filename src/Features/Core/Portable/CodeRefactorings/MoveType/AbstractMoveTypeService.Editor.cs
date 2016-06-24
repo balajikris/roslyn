@@ -14,7 +14,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax, TCompilationUnitSyntax>
     {
         private class Editor
         {
@@ -129,7 +129,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 
                 AddPartialModifiersToTypeChain(documentEditor, typeNode);
 
-                var membersToRemove = GetMembersToRemove(root, typeNode, removeDescendents: _makeTypePartial);
+                var membersToRemove = GetMembersToRemove(root, typeNode, removeDescendentsOfSelf: _makeTypePartial);
                 foreach (var member in membersToRemove)
                 {
                     documentEditor.RemoveNode(member, SyntaxRemoveOptions.KeepNoTrivia);
@@ -148,29 +148,45 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 return await CleanUpDocumentAsync(newDocument, cancellationToken).ConfigureAwait(false);
             }
 
+            // TODO: Think through this carefully. This is very brittle.
             private static IEnumerable<SyntaxNode> GetMembersToRemove(
-                SyntaxNode root, TTypeDeclarationSyntax typeNode, bool removeDescendents)
+                SyntaxNode root, TTypeDeclarationSyntax typeNode, bool removeDescendentsOfSelf)
             {
                 var ancestorsAndSelfToKeep = typeNode
                     .AncestorsAndSelf()
                     .Where(n => n is TNamespaceDeclarationSyntax || n is TTypeDeclarationSyntax);
 
-                var membersToRemove = root
+                var topLevelMembersToRemove = root
                     .DescendantNodesAndSelf(descendIntoChildren: _ => true, descendIntoTrivia: false)
-                    .Where(n => (n is TNamespaceDeclarationSyntax || n is TTypeDeclarationSyntax)
+                    .Where(n => IsTopLevelNamespaceOrTypeNode(n)
                                 ? !ancestorsAndSelfToKeep.Contains(n)
                                 : false);
 
-                if (removeDescendents)
+                var ancestorsKept = ancestorsAndSelfToKeep
+                    .OfType<TTypeDeclarationSyntax>()
+                    .Except(new[] { typeNode });
+
+                var membersOfAncestorsKept = ancestorsKept
+                    .SelectMany(a => a.DescendantNodes().OfType<TMemberDeclarationSyntax>().Where(t => !t.Equals(typeNode)));
+
+                var membersToRemove = topLevelMembersToRemove.Concat(membersOfAncestorsKept);
+
+                if (removeDescendentsOfSelf)
                 {
-                    var descendents = typeNode
+                    var descendentsOfSelf = typeNode
                         .DescendantNodes(descendIntoChildren: _ => true, descendIntoTrivia: false)
                         .OfType<TMemberDeclarationSyntax>();
 
-                    membersToRemove = membersToRemove.Concat(descendents);
+                    membersToRemove = membersToRemove.Concat(descendentsOfSelf);
                 }
 
                 return membersToRemove;
+            }
+
+            private static bool IsTopLevelNamespaceOrTypeNode(SyntaxNode node)
+            {
+                return (node is TNamespaceDeclarationSyntax && node.Parent is TCompilationUnitSyntax 
+                     || node is TTypeDeclarationSyntax && node.Parent is TNamespaceDeclarationSyntax);
             }
 
             private async Task<Solution> UpdateSourceDocumentAsync(

@@ -8,9 +8,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax> :
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax, TCompilationUnitSyntax> :
         IMoveTypeService
-        where TService : AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
+        where TService : AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax, TCompilationUnitSyntax>
         where TTypeDeclarationSyntax : SyntaxNode
         where TNamespaceDeclarationSyntax : SyntaxNode
         where TMemberDeclarationSyntax : SyntaxNode
@@ -41,6 +41,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             var uiRequired = state.TargetFileNameAlreadyExists;
             var isPartial = IsPartial(state.TypeNode);
 
+            // BALAJIK: make this clear, should also check if TypeNameMatchesFileName?
             if (state.IsNestedType)
             {
                 // nested type, make outer type partial and move type into a new file inside a partial part.

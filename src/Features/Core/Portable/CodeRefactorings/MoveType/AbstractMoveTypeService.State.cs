@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
 {
-    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax>
+    internal abstract partial class AbstractMoveTypeService<TService, TTypeDeclarationSyntax, TNamespaceDeclarationSyntax, TMemberDeclarationSyntax, TCompilationUnitSyntax>
     {
         protected class State
         {
@@ -24,7 +24,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             public bool TargetFileNameAlreadyExists { get; set; }
             public string TargetFileNameCandidate { get; set; }
             public string TargetFileExtension { get; set; }
-            public INamedTypeSymbol TypeSymbol { get; set; }
+            public INamedTypeSymbol TypeSymbol { get; set; } //BalajiK: This can be removed.
             public TTypeDeclarationSyntax TypeNode { get; set;}
 
             private State(SemanticDocument document)

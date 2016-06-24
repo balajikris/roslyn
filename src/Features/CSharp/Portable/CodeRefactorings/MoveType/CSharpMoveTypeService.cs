@@ -9,7 +9,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.MoveType
 {
     [ExportLanguageService(typeof(IMoveTypeService), LanguageNames.CSharp), Shared]
     internal class CSharpMoveTypeService :
-        AbstractMoveTypeService<CSharpMoveTypeService, BaseTypeDeclarationSyntax, NamespaceDeclarationSyntax, MemberDeclarationSyntax>
+        AbstractMoveTypeService<CSharpMoveTypeService, BaseTypeDeclarationSyntax, NamespaceDeclarationSyntax, MemberDeclarationSyntax, CompilationUnitSyntax>
     {
         protected override bool IsPartial(BaseTypeDeclarationSyntax typeDeclaration)
         {

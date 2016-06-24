@@ -8,7 +8,7 @@ Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 Namespace Microsoft.CodeAnalysis.VisualBasic.CodeRefactorings.MoveType
     <ExportLanguageService(GetType(IMoveTypeService), LanguageNames.VisualBasic), [Shared]>
     Friend Class VisualBasicMoveTypeService
-        Inherits AbstractMoveTypeService(Of VisualBasicMoveTypeService, TypeBlockSyntax, NamespaceBlockSyntax, DeclarationStatementSyntax)
+        Inherits AbstractMoveTypeService(Of VisualBasicMoveTypeService, TypeBlockSyntax, NamespaceBlockSyntax, DeclarationStatementSyntax, CompilationUnitSyntax)
 
         Protected Overrides Function IsPartial(typeDeclaration As TypeBlockSyntax) As Boolean
             Return typeDeclaration.BlockStatement.Modifiers.Any(SyntaxKind.PartialKeyword)
