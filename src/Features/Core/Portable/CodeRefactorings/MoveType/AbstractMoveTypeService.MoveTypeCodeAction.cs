@@ -16,7 +16,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly TService _service;
 
             private readonly bool _renameFile;
-            private readonly bool _moveToNewFile;
             private readonly bool _makeTypePartial;
             private readonly bool _makeOuterTypePartial;
             private readonly string _title;
@@ -27,7 +26,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 SemanticDocument document,
                 bool renameFile,
                 bool renameType,
-                bool moveToNewFile,
                 bool makeTypePartial,
                 bool makeOuterTypePartial,
                 State state)
@@ -35,7 +33,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 _document = document;
                 _renameFile = renameFile;
                 _renameType = renameType;
-                _moveToNewFile = moveToNewFile;
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypePartial = makeOuterTypePartial;
                 _state = state;
@@ -53,16 +50,12 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 {
                     return $"Rename Type to '{_state.DocumentName}'";
                 }
-                else if (_moveToNewFile || _makeOuterTypePartial)
-                {
-                    return $"Move Type to '{_state.TargetFileNameCandidate + _state.TargetFileExtension}'";
-                }
                 else if (_makeTypePartial)
                 {
                     return $"Make partial definition for '{_state.TypeSymbol.Name}'";
                 }
 
-                return "unexpected path reached";
+                return $"Move Type to '{_state.TargetFileNameCandidate + _state.TargetFileExtension}'";
             }
 
             public override string Title
@@ -74,7 +67,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 // var moveTypeOptions = new MoveTypeOptionsResult(_state.TargetFileNameCandidate);
                 // TODO: Make another constructor overload that doesn't require MoveTypeOptions.
-                var editor = new Editor(_service, _document, _renameFile, _renameType, _moveToNewFile, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions: null, fromDialog: false, cancellationToken: cancellationToken);
+                var editor = new Editor(_service, _document, _renameFile, _renameType, _makeTypePartial, _makeOuterTypePartial, _state, moveTypeOptions: null, fromDialog: false, cancellationToken: cancellationToken);
                 return await editor.GetOperationsAsync().ConfigureAwait(false);
             }
         }

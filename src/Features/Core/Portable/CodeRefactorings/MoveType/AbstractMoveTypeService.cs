@@ -39,7 +39,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
         {
             var actions = new List<CodeAction>();
             var uiRequired = state.TargetFileNameAlreadyExists;
-            var isAlreadyPartialType = IsPartial(state.TypeNode);
+            var isPartial = IsPartial(state.TypeNode);
 
             if (state.IsNestedType)
             {
@@ -47,11 +47,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 if (!uiRequired)
                 {
                     actions.Add(GetSimpleCodeAction(
-                        document, state, renameFile: false, renameType:false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: true));
+                        document, state, renameFile: false, renameType:false, makeTypePartial: false, makeOuterTypePartial: true));
                 }
 
                 actions.Add(GetCodeActionWithUI(
-                    document, state, renameFile: false, renameType:false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: true));
+                    document, state, renameFile: false, renameType:false, makeTypePartial: false, makeOuterTypePartial: true));
             }
             else
             {
@@ -62,22 +62,22 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     {
                         // rename file.
                         actions.Add(GetSimpleCodeAction(
-                            document, state, renameFile: true, renameType:false, moveToNewFile: false, makeTypePartial: false, makeOuterTypePartial: false));
+                            document, state, renameFile: true, renameType:false, makeTypePartial: false, makeOuterTypePartial: false));
 
                         // rename type.
                         actions.Add(GetSimpleCodeAction(
-                            document, state, renameFile: false, renameType: true, moveToNewFile: false, makeTypePartial: false, makeOuterTypePartial: false));
+                            document, state, renameFile: false, renameType: true, makeTypePartial: false, makeOuterTypePartial: false));
 
                         // make partial and create a partial decl in a new file
                         //actions.Add(GetSimpleCodeAction(
                         //    document, state, renameFile: false, renameType:false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
                     }
 
-                    if (!isAlreadyPartialType)
+                    if (!isPartial)
                     {
                         // create a partial part in a file name that user inputs.
                         actions.Add(GetCodeActionWithUI(
-                            document, state, renameFile: false, renameType: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false));
+                            document, state, renameFile: false, renameType: false, makeTypePartial: true, makeOuterTypePartial: false));
                     }
                 }
                 else
@@ -87,18 +87,18 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                     {
                         // move to file name that is precomputed
                         actions.Add(GetSimpleCodeAction(
-                            document, renameFile: false, renameType: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: false, state: state));
+                            document, renameFile: false, renameType: false, makeTypePartial: false, makeOuterTypePartial: false, state: state));
                     }
 
                     // move to a file name that user inputs.
                     actions.Add(GetCodeActionWithUI(
-                        document, renameFile: false, renameType: false, moveToNewFile: true, makeTypePartial: false, makeOuterTypePartial: false, state: state));
+                        document, renameFile: false, renameType: false, makeTypePartial: false, makeOuterTypePartial: false, state: state));
 
-                    if (!isAlreadyPartialType)
+                    if (!isPartial)
                     {
                         // create a partial part in a file name that user inputs.
                         actions.Add(GetCodeActionWithUI(
-                            document, renameFile: false, renameType: false, moveToNewFile: false, makeTypePartial: true, makeOuterTypePartial: false, state: state));
+                            document, renameFile: false, renameType: false, makeTypePartial: true, makeOuterTypePartial: false, state: state));
                     }
                 }
             }
@@ -106,14 +106,14 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             return actions;
         }
 
-        private CodeAction GetCodeActionWithUI(SemanticDocument document, State state, bool renameFile, bool renameType, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial)
+        private CodeAction GetCodeActionWithUI(SemanticDocument document, State state, bool renameFile, bool renameType, bool makeTypePartial, bool makeOuterTypePartial)
         {
-            return new MoveTypeCodeActionWithOption((TService)this, document, renameFile, renameType, moveToNewFile, makeTypePartial, makeOuterTypePartial, state);
+            return new MoveTypeCodeActionWithOption((TService)this, document, renameFile, renameType, makeTypePartial, makeOuterTypePartial, state);
         }
 
-        private MoveTypeCodeAction GetSimpleCodeAction(SemanticDocument document, State state, bool renameFile, bool renameType, bool moveToNewFile, bool makeTypePartial, bool makeOuterTypePartial)
+        private MoveTypeCodeAction GetSimpleCodeAction(SemanticDocument document, State state, bool renameFile, bool renameType, bool makeTypePartial, bool makeOuterTypePartial)
         {
-            return new MoveTypeCodeAction((TService)this, document, renameFile, renameType, moveToNewFile, makeTypePartial, makeOuterTypePartial, state);
+            return new MoveTypeCodeAction((TService)this, document, renameFile, renameType, makeTypePartial, makeOuterTypePartial, state);
         }
     }
 }

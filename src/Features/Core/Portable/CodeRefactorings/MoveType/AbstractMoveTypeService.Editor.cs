@@ -27,7 +27,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             private readonly bool _fromDialog;
             private readonly bool _makeOuterTypesPartial;
             private readonly bool _makeTypePartial;
-            private readonly bool _moveToNewFile;
             private readonly bool _renameFile;
             private readonly bool _renameType;
 
@@ -36,7 +35,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
                 SemanticDocument document,
                 bool renameFile,
                 bool renameType,
-                bool moveToNewFile,
                 bool makeTypePartial,
                 bool makeOuterTypePartial,
                 State state,
@@ -46,7 +44,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.MoveType
             {
                 _document = document;
                 _renameFile = renameFile;
-                _moveToNewFile = moveToNewFile;
                 _makeTypePartial = makeTypePartial;
                 _makeOuterTypesPartial = makeOuterTypePartial || makeTypePartial;
                 _renameType = renameType;
