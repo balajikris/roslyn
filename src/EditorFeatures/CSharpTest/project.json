@@ -1,9 +1,11 @@
 ﻿{
-  "dependencies": { },
+  "dependencies": {
+    "xunit.runner.wpf": "1.0.14"
+  },
   "frameworks": {
     "net46": {}
   },
   "runtimes": {
-    "win7": { }
+    "win7": {}
   }
 }
