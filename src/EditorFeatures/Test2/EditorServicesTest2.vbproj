@@ -71,6 +71,10 @@
       <Project>{EDC68A0E-C68D-4A74-91B7-BF38EC909888}</Project>
       <Name>Features</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CSharpTest\CSharpEditorServicesTest.csproj">
+      <Project>{AC2BCEFB-9298-4621-AC48-1FF5E639E48D}</Project>
+      <Name>CSharpEditorServicesTest</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Test\EditorServicesTest.csproj">
       <Project>{8CEE3609-A5A9-4A9B-86D7-33118F5D6B33}</Project>
       <Name>EditorServicesTest</Name>
@@ -152,6 +156,7 @@
     <Compile Include="IntelliSense\CompletionRulesTests.vb" />
     <Compile Include="LanguageServices\SyntaxFactsServiceTests.vb" />
     <Compile Include="NamingStyles\NamingStylesTests.vb" />
+    <Compile Include="Refactorings\MoveType\CSharpMoveTypeTests.vb" />
     <Compile Include="Simplification\SimplifierAPITests.vb" />
     <Compile Include="Utilities\GoToHelpers\GoToTestHelpers.vb" />
     <Compile Include="Utilities\MockDocumentNavigationServiceProvider.vb" />
